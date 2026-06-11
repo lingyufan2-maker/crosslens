@@ -10,6 +10,7 @@
     "build": "node node_modules/next/dist/bin/next build --webpack",
     "start": "node node_modules/next/dist/bin/next start",
     "lint": "eslint .",
+    "ship": "powershell -ExecutionPolicy Bypass -File ./deploy.ps1",
     "generate:questions": "node scripts/generate-questions.mjs"
   },
   "dependencies": {

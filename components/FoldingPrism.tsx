@@ -1,9 +1,15 @@
 "use client";
 
-const faces = ["职业", "城市", "年龄", "资源", "故事", "学科"];
+const faces = [
+  { key: "front", label: "故事" },
+  { key: "back", label: "资源" },
+  { key: "left", label: "职业" },
+  { key: "right", label: "城市" },
+  { key: "top", label: "年龄" },
+  { key: "bottom", label: "学科" }
+];
 
 export default function FoldingPrism({
-  activeQuestion = "",
   isDrawing = false,
   drawKey = 0
 }: {
@@ -12,22 +18,23 @@ export default function FoldingPrism({
   drawKey?: number;
 }) {
   return (
-    <div className={`folding-prism-wrap ${isDrawing ? "is-drawing" : ""}`} aria-hidden={!activeQuestion}>
-      <div className="folding-prism-stage">
-        <div key={drawKey} className="folding-prism" aria-hidden="true">
-          {faces.map((face, index) => (
-            <span key={face} className={`prism-face prism-face-${index + 1}`}>
-              <span>{face}</span>
-            </span>
+    <div className={`glass-cube-hero ${isDrawing ? "is-drawing" : ""}`} aria-hidden="true">
+      <div className="cube-light-orbit orbit-a" />
+      <div className="cube-light-orbit orbit-b" />
+
+      <div className="cube-stage">
+        <div key={drawKey} className="cube-net">
+          {faces.map((face) => (
+            <div key={face.key} className={`cube-face face-${face.key}`}>
+              <span>{face.label}</span>
+            </div>
           ))}
-          <span className="prism-flare" />
         </div>
-        {activeQuestion && (
-          <div className="prism-question">
-            <p>{activeQuestion}</p>
-          </div>
-        )}
       </div>
+
+      <div className="cube-ground-glow" />
+      <div className="cube-caustic caustic-a" />
+      <div className="cube-caustic caustic-b" />
     </div>
   );
 }

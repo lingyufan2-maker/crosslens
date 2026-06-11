@@ -582,8 +582,148 @@ export default function Home() {
   }
 
   return (
-    <main className="lab-grid relative min-h-screen overflow-hidden bg-[#f5f1e8] px-3 py-3 text-ink sm:px-6 sm:py-5 lg:px-8">
+    <main className={mode === "home" ? "home-landing text-ink" : "lab-grid relative min-h-screen overflow-hidden bg-[#f5f1e8] px-3 py-3 text-ink sm:px-6 sm:py-5 lg:px-8"}>
       {(mode === "home" || mode === "blindbox") && <HomeQuestionField refreshKey={questionFlowRefreshKey} boostKey={questionFlowBoostKey} />}
+
+      {mode === "home" && (
+        <>
+          <header className="home-topbar">
+            <button type="button" onClick={() => setMode("home")} className="brand-mark">
+              <span className="brand-symbol">
+                <span />
+                <span />
+              </span>
+              <span>CrossLens</span>
+            </button>
+
+            <nav className="home-nav" aria-label="Home navigation">
+              <button type="button" onClick={drawQuestionBlindbox}>探索问题</button>
+              <button type="button" onClick={openCareerStoryLens}>真实经验</button>
+              <button type="button" onClick={openCareerStoryLens}>匿名社区</button>
+              <button type="button" onClick={() => setQuestionFlowRefreshKey((value) => value + 1)}>关于我们</button>
+            </nav>
+
+            <div className="top-actions">
+              <button type="button" className="login-button">登录 / 注册</button>
+              <button type="button" onClick={toggleLanguage} className="theme-button" aria-label="切换语言">
+                ☼
+              </button>
+            </div>
+          </header>
+
+          <section className="hero-layout">
+            <div className="hero-cube-zone">
+              <FoldingPrism />
+            </div>
+
+            <div className="hero-copy-panel">
+              <div className="hero-wordmark">
+                <span className="lens-logo">
+                  <span />
+                  <span />
+                </span>
+                <span>CrossLens</span>
+              </div>
+
+              <h1>
+                同一个问题，
+                <br />
+                不同人生会看见不同的路。
+              </h1>
+
+              <p className="hero-subline">
+                从<span>跨学科问题</span>开始，进入真实人生经验与<strong>匿名社区</strong>。
+              </p>
+
+              <form
+                className="hero-search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void analyzeCustom();
+                }}
+              >
+                <input
+                  id="home-question-input"
+                  value={customQuestion}
+                  onChange={(event) => {
+                    setCustomQuestion(event.target.value);
+                    setInputWarning("");
+                  }}
+                  placeholder="输入你的问题，开启多元视角..."
+                />
+                <button type="submit" aria-label="开始分析" disabled={isAnalyzing}>
+                  ◇
+                </button>
+              </form>
+              {inputWarning && <p className="hero-warning">{inputWarning}</p>}
+
+              <div className="hero-cta-row">
+                <button type="button" onClick={drawQuestionBlindbox} className="hero-cta-primary">
+                  <span className="button-icon">▧</span>
+                  随机打开一个问题
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    document.getElementById("home-question-input")?.focus();
+                    setInputWarning("");
+                  }}
+                  className="hero-cta-secondary"
+                >
+                  <span className="button-icon">✎</span>
+                  输入我的困惑
+                </button>
+              </div>
+
+              <div className="hero-pill-row">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const picked = randomFrom(randomBlindboxQuestions);
+                    setBlindboxQuestion(picked);
+                    setCustomQuestion(picked);
+                    void openLifeLens(picked);
+                  }}
+                >
+                  ▧ 人生视角盲盒 ›
+                </button>
+                <button type="button" onClick={openCareerStoryLens}>☵ 匿名职业故事 ›</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const picked = randomFrom(randomBlindboxQuestions);
+                    setCustomQuestion(picked);
+                    void runAnalysis(picked, undefined, "custom");
+                  }}
+                >
+                  ◎ 跨学科 Lens ›
+                </button>
+              </div>
+
+              <div className="hero-proof-card">
+                <div className="proof-star">✧</div>
+                <div className="proof-divider" />
+                <div className="proof-content">
+                  <p className="proof-main">在这里，每个问题都值得被多角度看见。</p>
+                  <p className="proof-sub">
+                    <span className="avatar-row">
+                      <span />
+                      <span />
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                    来自 132,742+ 匿名用户的真实经验与思考
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      {mode !== "home" && (
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-40px)] w-full max-w-6xl flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-ink/10 pb-3 sm:pb-4">
           <button
@@ -601,93 +741,6 @@ export default function Home() {
             {t.language}
           </button>
         </header>
-
-        {mode === "home" && (
-          <section className="relative flex flex-1 flex-col gap-5 py-4 sm:py-6 lg:min-h-[calc(100vh-96px)] lg:py-0">
-            <div className="relative order-first h-[320px] w-full lg:absolute lg:left-0 lg:top-1/2 lg:h-[min(82vh,760px)] lg:w-[min(52vw,820px)] lg:-translate-y-1/2">
-              <FoldingPrism />
-            </div>
-
-            <div className="relative z-20 w-full lg:ml-[58vw] lg:flex lg:min-h-[calc(100vh-120px)] lg:w-[min(38vw,580px)] lg:flex-col lg:justify-center">
-              <div className="max-w-xl">
-                <h1 className="text-3xl font-semibold leading-[1.04] sm:text-5xl lg:text-6xl">{t.title}</h1>
-                <p className="mt-3 max-w-lg text-sm leading-6 text-ink/70 sm:mt-5 sm:text-base sm:leading-8">{t.subtitle}</p>
-                <button
-                  type="button"
-                  onClick={() => setQuestionFlowRefreshKey((value) => value + 1)}
-                  className="mt-4 border border-ink/15 bg-white/75 px-4 py-2 text-sm font-semibold text-ink shadow-sm backdrop-blur transition hover:border-moss hover:bg-lab"
-                >
-                  {t.refreshField}
-                </button>
-              </div>
-
-              <div className="mt-5 grid gap-2 sm:gap-3">
-              <ActionPanel title={t.fullRandom} description={t.fullRandomHint} marker="01" onClick={drawQuestionBlindbox} />
-              <ActionPanel
-                title={t.guidedRandom}
-                description={t.guidedRandomHint}
-                marker="02"
-                onClick={() => {
-                  const picked = randomFrom(randomBlindboxQuestions);
-                  setBlindboxQuestion(picked);
-                  setCustomQuestion(picked);
-                  void openLifeLens(picked);
-                }}
-              />
-              <ActionPanel
-                title={t.careerStories}
-                description={t.careerStoriesHint}
-                marker="03"
-                onClick={openCareerStoryLens}
-              />
-              <div className="border border-ink/12 bg-white/72 p-4 shadow-soft backdrop-blur sm:p-5">
-                <div className="mb-4 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-copper">04</p>
-                    <h2 className="mt-2 text-xl font-semibold sm:text-2xl">{t.askMyQuestion}</h2>
-                    <p className="mt-2 text-sm leading-6 text-ink/62">{t.askMyQuestionHint}</p>
-                  </div>
-                </div>
-                <textarea
-                  value={customQuestion}
-                  onChange={(event) => {
-                    setCustomQuestion(event.target.value);
-                    setInputWarning("");
-                  }}
-                  placeholder={t.inputPlaceholder}
-                  className="min-h-28 w-full resize-none border border-ink/12 bg-paper/70 p-3 text-sm leading-6 outline-none transition placeholder:text-ink/35 focus:border-moss"
-                />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {t.exampleQuestions.map((example) => (
-                    <button
-                      key={example}
-                      type="button"
-                      onClick={() => {
-                        setCustomQuestion(example);
-                        setInputWarning("");
-                      }}
-                      className="rounded-full border border-ink/12 bg-paper/70 px-3 py-2 text-xs font-semibold text-ink/70 transition hover:border-moss hover:bg-lab hover:text-moss"
-                    >
-                      {example}
-                    </button>
-                  ))}
-                </div>
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm text-copper">{inputWarning}</p>
-                  <button
-                    type="button"
-                    onClick={analyzeCustom}
-                    disabled={isAnalyzing}
-                    className="w-full bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-moss disabled:cursor-wait disabled:opacity-70 sm:w-auto"
-                  >
-                    {isAnalyzing ? t.loading : t.analyze}
-                  </button>
-                </div>
-              </div>
-            </div>
-            </div>
-          </section>
-        )}
 
         {mode === "blindbox" && (
           <section className="grid flex-1 place-items-center gap-3 py-6">
@@ -819,6 +872,7 @@ export default function Home() {
           />
         )}
       </div>
+      )}
     </main>
   );
 }
