@@ -176,3 +176,30 @@ export type CareerBridgeApiResponse = {
   isFallback: boolean;
   notice?: string;
 };
+
+export type LifeView = {
+  position: string;
+  viewpoint: string;
+  whyTheySeeItThisWay: string;
+  whatThisReveals: string;
+};
+
+export type LifeLensMiniLens = {
+  lens: string;
+  simpleExplanation: string;
+  realExample: string;
+};
+
+export type LifeLensResult = {
+  question: string;
+  summary: string;
+  lifeViews: LifeView[];
+  crossDisciplinaryLens: LifeLensMiniLens[];
+  takeaway: string[];
+};
+
+export type LifeLensApiResponse = {
+  result: LifeLensResult;
+  isFallback: boolean;
+  notice?: string;
+};

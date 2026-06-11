@@ -41,6 +41,171 @@ input {
   background-size: 28px 28px;
 }
 
+.folding-prism-wrap {
+  pointer-events: none;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+}
+
+.folding-prism-stage {
+  position: relative;
+  width: min(380px, 58vw);
+  height: min(380px, 58vw);
+  perspective: 980px;
+  display: grid;
+  place-items: center;
+}
+
+.folding-prism {
+  --face: min(116px, 18vw);
+  position: relative;
+  width: var(--face);
+  height: var(--face);
+  transform-style: preserve-3d;
+  animation: prismCycle 4s cubic-bezier(0.7, 0, 0.2, 1) infinite;
+}
+
+.prism-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(49, 95, 81, 0.28);
+  background:
+    linear-gradient(135deg, rgba(255, 252, 246, 0.54), rgba(128, 157, 125, 0.18)),
+    rgba(245, 241, 232, 0.38);
+  box-shadow: inset 0 0 32px rgba(255, 255, 255, 0.24), 0 18px 50px rgba(31, 41, 37, 0.12);
+  backdrop-filter: blur(10px);
+  color: rgba(34, 54, 39, 0.78);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  transform-origin: center;
+  animation-duration: 4s;
+  animation-timing-function: cubic-bezier(0.7, 0, 0.2, 1);
+  animation-iteration-count: infinite;
+}
+
+.prism-face-1 {
+  animation-name: prismFaceFront;
+}
+
+.prism-face-2 {
+  animation-name: prismFaceRight;
+}
+
+.prism-face-3 {
+  animation-name: prismFaceLeft;
+}
+
+.prism-face-4 {
+  animation-name: prismFaceTop;
+}
+
+.prism-face-5 {
+  animation-name: prismFaceBottom;
+}
+
+.prism-face-6 {
+  animation-name: prismFaceBack;
+}
+
+.prism-crack {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: 2px;
+  height: 84%;
+  transform: translateX(-50%) translateZ(calc(var(--face) / 2 + 2px)) rotate(8deg);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, rgba(249, 236, 174, 0.92), transparent);
+  box-shadow: 0 0 24px rgba(249, 236, 174, 0.72);
+  opacity: 0;
+  animation: prismCrack 4s ease-in-out infinite;
+}
+
+.prism-question {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(300px, 76vw);
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(49, 95, 81, 0.24);
+  background: rgba(255, 252, 246, 0.82);
+  box-shadow: 0 22px 80px rgba(31, 41, 37, 0.18);
+  backdrop-filter: blur(12px);
+  padding: 1rem;
+  text-align: center;
+}
+
+.prism-question p {
+  margin: 0;
+  color: #223627;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.folding-prism-wrap.is-drawing .folding-prism {
+  animation-duration: 1.15s;
+}
+
+@keyframes prismCycle {
+  0%, 12%, 100% {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  32% {
+    transform: rotateX(-17deg) rotateY(35deg) rotateZ(-2deg);
+  }
+  65% {
+    transform: rotateX(-12deg) rotateY(395deg) rotateZ(1deg);
+  }
+  80% {
+    transform: rotateX(-18deg) rotateY(438deg) rotateZ(-1deg);
+  }
+}
+
+@keyframes prismFaceFront {
+  0%, 12%, 100% { transform: translate3d(0, 0, 0); }
+  32%, 80% { transform: translateZ(calc(var(--face) / 2)); }
+}
+
+@keyframes prismFaceRight {
+  0%, 12%, 100% { transform: translate3d(var(--face), 0, 0); }
+  32%, 80% { transform: rotateY(90deg) translateZ(calc(var(--face) / 2)); }
+}
+
+@keyframes prismFaceLeft {
+  0%, 12%, 100% { transform: translate3d(calc(var(--face) * -1), 0, 0); }
+  32%, 80% { transform: rotateY(-90deg) translateZ(calc(var(--face) / 2)); }
+}
+
+@keyframes prismFaceTop {
+  0%, 12%, 100% { transform: translate3d(0, calc(var(--face) * -1), 0); }
+  32%, 80% { transform: rotateX(90deg) translateZ(calc(var(--face) / 2)); }
+}
+
+@keyframes prismFaceBottom {
+  0%, 12%, 100% { transform: translate3d(0, var(--face), 0); }
+  32%, 80% { transform: rotateX(-90deg) translateZ(calc(var(--face) / 2)); }
+}
+
+@keyframes prismFaceBack {
+  0%, 12%, 100% { transform: translate3d(var(--face), var(--face), 0); }
+  32%, 80% { transform: rotateY(180deg) translateZ(calc(var(--face) / 2)); }
+}
+
+@keyframes prismCrack {
+  0%, 62%, 82%, 100% {
+    opacity: 0;
+  }
+  68%, 78% {
+    opacity: 1;
+  }
+}
+
 .question-nebula {
   position: absolute;
   inset: 0;
@@ -149,6 +314,45 @@ input {
       transform: translateY(0) scale(1);
     }
   }
+}
+
+@media (max-width: 640px) {
+  .folding-prism-wrap {
+    min-height: 260px;
+  }
+
+  .folding-prism-stage {
+    width: min(260px, 76vw);
+    height: min(260px, 76vw);
+  }
+
+  .folding-prism {
+    --face: min(82px, 24vw);
+  }
+
+  .prism-face {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folding-prism,
+  .prism-face,
+  .prism-crack {
+    animation: none !important;
+  }
+
+  .folding-prism {
+    transform: rotateX(-12deg) rotateY(28deg);
+  }
+
+  .prism-face-1 { transform: translateZ(calc(var(--face) / 2)); }
+  .prism-face-2 { transform: rotateY(90deg) translateZ(calc(var(--face) / 2)); }
+  .prism-face-3 { transform: rotateY(-90deg) translateZ(calc(var(--face) / 2)); }
+  .prism-face-4 { transform: rotateX(90deg) translateZ(calc(var(--face) / 2)); }
+  .prism-face-5 { transform: rotateX(-90deg) translateZ(calc(var(--face) / 2)); }
+  .prism-face-6 { transform: rotateY(180deg) translateZ(calc(var(--face) / 2)); }
 }
 
 @media (max-width: 640px) {

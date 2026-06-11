@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { adjacentCategories, categories, questions } from "@/data/questions";
+import { randomBlindboxQuestions } from "@/data/randomBlindboxQuestions";
 import { lensMeta } from "@/lib/mockAi";
 import type {
   Analysis,
@@ -10,27 +11,33 @@ import type {
   CrossLensApiAnalysis,
   ChallengeItem,
   Language,
+  LifeLensApiResponse,
+  LifeLensResult as LifeLensResultType,
   LensActionItem,
   LensAnalysisItem,
   LensCode,
   Question
 } from "@/lib/types";
-import HomeQuestionFlowBackground from "@/components/HomeQuestionFlowBackground";
+import HomeQuestionField from "@/components/HomeQuestionField";
+import FoldingPrism from "@/components/FoldingPrism";
 import CareerActionLab from "@/components/CareerActionLab";
+import LifeLensResult from "@/components/LifeLensResult";
 
-type Mode = "home" | "guided" | "analysis";
+type Mode = "home" | "guided" | "blindbox" | "lifeLens" | "analysis";
 type DrawMode = "full" | "guided" | "custom";
 
 const copy = {
   cn: {
-    title: "CrossLens",
-    subtitle: "随机遇见一个你平时不会主动搜索的问题，再用跨学科 Lens 重新观察它。",
-    fullRandom: "完全随机",
-    fullRandomHint: "从全部问题库抽一个问题，最大化陌生感。",
-    guidedRandom: "轻随机",
-    guidedRandomHint: "先选方向，但保留 20% 的偏航概率。",
-    askMyQuestion: "自己输入",
-    askMyQuestionHint: "把现实困惑交给 Lens 系统拆解。",
+    title: "同一个问题，不同人生会看见不同的路。",
+    subtitle: "CrossLens 用匿名故事、随机问题和跨学科 Lens，帮你看见职业背后的人生、信息差和下一步路径。",
+    fullRandom: "完全随机问题盲盒",
+    fullRandomHint: "随机打开一个你平时不会主动搜索的问题。",
+    guidedRandom: "人生视角盲盒",
+    guidedRandomHint: "看看四年级学生、刚毕业的人、服务业工作人员和 80 岁老人，会怎样理解同一个问题。",
+    careerStories: "匿名职业故事",
+    careerStoriesHint: "看见每一种职业背后的真实一天、自由、消耗和跳板路径。",
+    askMyQuestion: "自己提问",
+    askMyQuestionHint: "输入你的现实困惑，让 CrossLens 帮你拆成不同位置、不同学科和具体行动。",
     chooseCategory: "选择一个分类",
     categoryNote: "轻随机有 20% 概率从相邻分类抽题，让答案绕一点路。",
     draw: "抽一个问题",
@@ -62,6 +69,9 @@ const copy = {
     emptyInput: "请先输入一个问题",
     loading: "分析中...",
     refreshField: "刷新问题场",
+    drawing: "正在从问题流里抽取一个陌生入口...",
+    viewLifeLens: "看不同人生怎么看",
+    useLensAnalysis: "用跨学科 Lens 拆解",
     summary: "CrossLens 总结",
     coreInsight: "核心洞察",
     defaultAssumption: "被挑战的默认假设",
@@ -100,14 +110,16 @@ const copy = {
     language: "EN"
   },
   en: {
-    title: "CrossLens",
-    subtitle: "Meet a question you would not usually search for, then inspect it through interdisciplinary lenses.",
-    fullRandom: "Full Random",
-    fullRandomHint: "Draw from the whole question bank for maximum unfamiliarity.",
-    guidedRandom: "Guided Random",
-    guidedRandomHint: "Choose a direction, with a 20% chance of productive drift.",
+    title: "The same question reveals different paths in different lives.",
+    subtitle: "CrossLens uses anonymous stories, random questions, and interdisciplinary lenses to reveal life behind careers, information gaps, and next steps.",
+    fullRandom: "Random Question Blind Box",
+    fullRandomHint: "Open a question you would not usually search for.",
+    guidedRandom: "Life Perspective Blind Box",
+    guidedRandomHint: "See how a fourth grader, a new graduate, a service worker, and an 80-year-old may understand the same question.",
+    careerStories: "Anonymous Career Stories",
+    careerStoriesHint: "See the real day, freedom, exhaustion, and bridge path behind different jobs.",
     askMyQuestion: "Ask My Question",
-    askMyQuestionHint: "Bring a real problem into the Lens system.",
+    askMyQuestionHint: "Enter a real dilemma and let CrossLens split it across positions, disciplines, and concrete actions.",
     chooseCategory: "Choose a category",
     categoryNote: "Guided Random has a 20% chance to draw from a nearby category.",
     draw: "Draw a Question",
@@ -139,6 +151,9 @@ const copy = {
     emptyInput: "Write a question first, then start the analysis.",
     loading: "Analyzing...",
     refreshField: "Refresh Question Field",
+    drawing: "Drawing an unfamiliar entry from the question flow...",
+    viewLifeLens: "See Different Lives",
+    useLensAnalysis: "Analyze With CrossLens",
     summary: "CrossLens Summary",
     coreInsight: "Core Insight",
     defaultAssumption: "Challenged Default Assumption",
@@ -371,10 +386,17 @@ export default function Home() {
   const [customQuestion, setCustomQuestion] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [analysisNotice, setAnalysisNotice] = useState("");
+  const [blindboxQuestion, setBlindboxQuestion] = useState("");
+  const [isDrawingBlindbox, setIsDrawingBlindbox] = useState(false);
+  const [lifeLensResult, setLifeLensResult] = useState<LifeLensResultType | null>(null);
+  const [lifeLensNotice, setLifeLensNotice] = useState("");
+  const [isLifeLensLoading, setIsLifeLensLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [inputWarning, setInputWarning] = useState("");
   const [copied, setCopied] = useState(false);
   const [questionFlowRefreshKey, setQuestionFlowRefreshKey] = useState(0);
+  const [questionFlowBoostKey, setQuestionFlowBoostKey] = useState(0);
+  const [prismDrawKey, setPrismDrawKey] = useState(0);
 
   const t = copy[language];
 
@@ -403,6 +425,22 @@ export default function Home() {
     return (await response.json()) as AnalyzeApiResponse;
   }
 
+  async function requestLifeLens(question: string) {
+    const response = await fetch("/api/life-lens", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ question })
+    });
+
+    if (!response.ok) {
+      throw new Error("Life Lens request failed.");
+    }
+
+    return (await response.json()) as LifeLensApiResponse;
+  }
+
   async function runAnalysis(question: string, sourceQuestion?: Question, nextDrawMode: DrawMode = drawMode, targetLanguage = language) {
     setDrawMode(nextDrawMode);
     setMode("analysis");
@@ -427,6 +465,47 @@ export default function Home() {
     setCurrentQuestion(picked);
     setCustomQuestion("");
     void runAnalysis(questionText(picked, language), picked, "full");
+  }
+
+  function drawQuestionBlindbox() {
+    setMode("blindbox");
+    const picked = randomFrom(randomBlindboxQuestions);
+    setBlindboxQuestion(picked);
+    setCustomQuestion(picked);
+    setCurrentQuestion(null);
+    setLifeLensResult(null);
+    setLifeLensNotice("");
+    setIsDrawingBlindbox(true);
+    setQuestionFlowBoostKey((value) => value + 1);
+    setPrismDrawKey((value) => value + 1);
+
+    window.setTimeout(() => {
+      setIsDrawingBlindbox(false);
+    }, 980);
+  }
+
+  async function openLifeLens(question: string) {
+    const trimmed = question.trim();
+    if (!trimmed) return;
+
+    setMode("lifeLens");
+    setLifeLensResult(null);
+    setLifeLensNotice("");
+    setIsLifeLensLoading(true);
+
+    try {
+      const data = await requestLifeLens(trimmed);
+      setLifeLensResult(data.result);
+      setLifeLensNotice(data.isFallback ? data.notice ?? "当前为本地演示答案，未连接真实 DeepSeek。" : "");
+    } catch {
+      setLifeLensNotice("当前为本地演示答案，未连接真实 DeepSeek。");
+    } finally {
+      setIsLifeLensLoading(false);
+    }
+  }
+
+  function openCareerStoryLens() {
+    void openLifeLens("为什么每一种职业背后，都有别人看不见的真实一天、自由、消耗和跳板路径？");
   }
 
   function drawGuidedRandom(category = selectedCategory) {
@@ -502,7 +581,7 @@ export default function Home() {
 
   return (
     <main className="lab-grid relative min-h-screen overflow-hidden bg-[#f5f1e8] px-3 py-3 text-ink sm:px-6 sm:py-5 lg:px-8">
-      {mode === "home" && <HomeQuestionFlowBackground refreshKey={questionFlowRefreshKey} />}
+      {(mode === "home" || mode === "blindbox") && <HomeQuestionField refreshKey={questionFlowRefreshKey} boostKey={questionFlowBoostKey} />}
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-40px)] w-full max-w-6xl flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-ink/10 pb-3 sm:pb-4">
           <button
@@ -522,10 +601,10 @@ export default function Home() {
         </header>
 
         {mode === "home" && (
-          <section className="grid flex-1 items-start gap-5 py-5 sm:items-center sm:gap-7 sm:py-10 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="max-w-2xl">
-              <h1 className="text-4xl font-semibold leading-[0.98] sm:text-6xl lg:text-7xl">{t.title}</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-ink/70 sm:mt-6 sm:text-lg sm:leading-8">{t.subtitle}</p>
+          <section className="grid flex-1 items-center gap-5 py-5 sm:gap-7 sm:py-8 lg:grid-cols-[0.92fr_1.05fr_0.92fr]">
+            <div className="max-w-xl">
+              <h1 className="text-3xl font-semibold leading-[1.04] sm:text-5xl lg:text-6xl">{t.title}</h1>
+              <p className="mt-3 max-w-lg text-sm leading-6 text-ink/70 sm:mt-5 sm:text-base sm:leading-8">{t.subtitle}</p>
               <button
                 type="button"
                 onClick={() => setQuestionFlowRefreshKey((value) => value + 1)}
@@ -535,18 +614,33 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="grid gap-3">
-              <ActionPanel title={t.fullRandom} description={t.fullRandomHint} marker="01" onClick={drawFullRandom} />
+            <div className="order-first lg:order-none">
+              <FoldingPrism />
+            </div>
+
+            <div className="grid gap-2 sm:gap-3">
+              <ActionPanel title={t.fullRandom} description={t.fullRandomHint} marker="01" onClick={drawQuestionBlindbox} />
               <ActionPanel
                 title={t.guidedRandom}
                 description={t.guidedRandomHint}
                 marker="02"
-                onClick={() => setMode("guided")}
+                onClick={() => {
+                  const picked = randomFrom(randomBlindboxQuestions);
+                  setBlindboxQuestion(picked);
+                  setCustomQuestion(picked);
+                  void openLifeLens(picked);
+                }}
               />
-              <div className="border border-ink/12 bg-white/70 p-4 shadow-soft backdrop-blur sm:p-5">
+              <ActionPanel
+                title={t.careerStories}
+                description={t.careerStoriesHint}
+                marker="03"
+                onClick={openCareerStoryLens}
+              />
+              <div className="border border-ink/12 bg-white/72 p-4 shadow-soft backdrop-blur sm:p-5">
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold text-copper">03</p>
+                    <p className="text-xs font-semibold text-copper">04</p>
                     <h2 className="mt-2 text-xl font-semibold sm:text-2xl">{t.askMyQuestion}</h2>
                     <p className="mt-2 text-sm leading-6 text-ink/62">{t.askMyQuestionHint}</p>
                   </div>
@@ -589,6 +683,67 @@ export default function Home() {
               </div>
             </div>
           </section>
+        )}
+
+        {mode === "blindbox" && (
+          <section className="grid flex-1 place-items-center gap-3 py-6">
+            <FoldingPrism activeQuestion={blindboxQuestion} isDrawing={isDrawingBlindbox} drawKey={prismDrawKey} />
+            <div className="w-full max-w-2xl rounded-md border border-ink/12 bg-white/84 p-5 text-center shadow-soft backdrop-blur sm:p-8">
+              {isDrawingBlindbox ? (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-copper">Question Blind Box</p>
+                  <p className="mt-4 text-xl font-semibold text-moss">{t.drawing}</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-copper">你抽到了</p>
+                  <h1 className="mt-4 text-2xl font-semibold leading-tight text-ink sm:text-4xl">{blindboxQuestion}</h1>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => void openLifeLens(blindboxQuestion)}
+                      className="rounded-md bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-moss"
+                    >
+                      {t.viewLifeLens}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void runAnalysis(blindboxQuestion, undefined, "custom")}
+                      className="rounded-md border border-moss bg-white px-4 py-3 text-sm font-semibold text-moss transition hover:bg-lab"
+                    >
+                      {t.useLensAnalysis}
+                    </button>
+                  </div>
+                  <button type="button" onClick={drawQuestionBlindbox} className="mt-4 text-sm font-semibold text-ink/55 hover:text-moss">
+                    {t.redraw}
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {mode === "lifeLens" && !lifeLensResult && (
+          <section className="grid flex-1 place-items-center py-8">
+            <div className="w-full border border-moss/25 bg-lab p-5 text-center text-sm font-semibold text-moss shadow-soft sm:max-w-md">
+              {isLifeLensLoading ? t.loading : lifeLensNotice || t.loading}
+            </div>
+          </section>
+        )}
+
+        {mode === "lifeLens" && lifeLensResult && (
+          <LifeLensResult
+            result={lifeLensResult}
+            notice={lifeLensNotice}
+            onBack={() => setMode("home")}
+            onRedraw={() => {
+              const picked = randomFrom(randomBlindboxQuestions);
+              setBlindboxQuestion(picked);
+              setCustomQuestion(picked);
+              void openLifeLens(picked);
+            }}
+            onAnalyze={() => void runAnalysis(lifeLensResult.question, undefined, "custom")}
+          />
         )}
 
         {mode === "guided" && (
