@@ -18,10 +18,16 @@ export default function LifeLensResult({
   onBack: () => void;
 }) {
   const [isStoryOpen, setIsStoryOpen] = useState(false);
+  const meta = result.meta;
 
   return (
     <section className="mx-auto w-full max-w-[1180px] py-5 sm:py-7">
       {notice && <p className="mb-4 rounded-md border border-copper/25 bg-white/80 p-3 text-sm font-semibold text-copper">{notice}</p>}
+
+      <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold text-ink/62">
+        <span className="rounded-full border border-moss/15 bg-white/70 px-3 py-1">AI source: {meta?.source ?? "unknown"}</span>
+        <span className="rounded-full border border-moss/15 bg-white/70 px-3 py-1">Model: {meta?.model ?? "unknown"}</span>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
         <aside className="rounded-md border border-ink/12 bg-white/82 p-4 shadow-soft lg:sticky lg:top-5">
@@ -47,15 +53,17 @@ export default function LifeLensResult({
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-copper">不同人生怎么看</p>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {result.lifeViews.map((view) => (
-                <details key={`${view.position}-${view.viewpoint}`} className="group rounded-md border border-ink/10 bg-paper/55 p-4">
+                <details key={`${view.position}-${view.firstReaction}`} className="group rounded-md border border-ink/10 bg-paper/55 p-4">
                   <summary className="cursor-pointer list-none">
                     <span className="inline-flex rounded-full border border-moss/20 bg-lab px-3 py-1 text-xs font-bold text-moss">{view.position}</span>
-                    <p className="mt-3 text-sm leading-7 text-ink/76">{view.viewpoint}</p>
+                    <p className="mt-3 text-sm leading-7 text-ink/76">{view.firstReaction}</p>
                     <span className="mt-3 inline-block text-xs font-bold text-moss group-open:hidden">展开这个人生视角</span>
                     <span className="mt-3 hidden text-xs font-bold text-moss group-open:inline-block">收起</span>
                   </summary>
                   <div className="mt-4 grid gap-3 border-t border-ink/10 pt-4">
-                    <MiniBlock title="为什么他会这样看" value={view.whyTheySeeItThisWay} />
+                    <MiniBlock title="他们在意什么" value={view.whatTheyCareAbout} />
+                    <MiniBlock title="可能没看见什么" value={view.blindSpot} />
+                    <MiniBlock title="一个小场景" value={view.tinyStory} />
                     <MiniBlock title="这揭示了什么" value={view.whatThisReveals} />
                   </div>
                 </details>

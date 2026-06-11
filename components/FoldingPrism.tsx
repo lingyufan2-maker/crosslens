@@ -1,6 +1,6 @@
 "use client";
 
-const faces = ["职业", "城市", "年龄", "资源", "学科", "故事"];
+const faces = ["职业", "城市", "年龄", "资源", "故事", "学科"];
 
 export default function FoldingPrism({
   activeQuestion = "",
@@ -14,13 +14,13 @@ export default function FoldingPrism({
   return (
     <div className={`folding-prism-wrap ${isDrawing ? "is-drawing" : ""}`} aria-hidden={!activeQuestion}>
       <div className="folding-prism-stage">
-        <div key={drawKey} className="folding-prism">
+        <div key={drawKey} className="folding-prism" aria-hidden="true">
           {faces.map((face, index) => (
             <span key={face} className={`prism-face prism-face-${index + 1}`}>
-              {face}
+              <span>{face}</span>
             </span>
           ))}
-          <span className="prism-crack" />
+          <span className="prism-flare" />
         </div>
         {activeQuestion && (
           <div className="prism-question">

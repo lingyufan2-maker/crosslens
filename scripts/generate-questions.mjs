@@ -10,7 +10,7 @@ const deepseekUrl = "https://api.deepseek.com/chat/completions";
 loadEnvLocal();
 
 const apiKey = process.env.DEEPSEEK_API_KEY;
-const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+const model = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
 
 if (!apiKey) {
   console.log("[CrossLens] DEEPSEEK_API_KEY is missing. Existing public/questions.json was kept.");
@@ -138,6 +138,11 @@ async function requestJsonArray(prompt) {
     },
     body: JSON.stringify({
       model,
+      thinking: { type: "enabled" },
+      reasoning_effort: "high",
+      temperature: 0.7,
+      max_tokens: 6000,
+      stream: false,
       response_format: { type: "json_object" },
       messages: [
         {
@@ -149,8 +154,7 @@ async function requestJsonArray(prompt) {
           role: "user",
           content: prompt
         }
-      ],
-      temperature: 0.85
+      ]
     })
   });
 

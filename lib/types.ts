@@ -68,6 +68,14 @@ export type AnalyzeApiResponse = {
   analysis: CrossLensApiAnalysis;
   isFallback: boolean;
   notice?: string;
+  meta?: AiSourceMeta;
+};
+
+export type AiSourceMeta = {
+  source: "deepseek" | "fallback";
+  model: string;
+  fallbackReason?: string;
+  reasoning?: "high";
 };
 
 export type DeepSeekLens = {
@@ -175,12 +183,15 @@ export type CareerBridgeApiResponse = {
   result: CareerBridgeResult;
   isFallback: boolean;
   notice?: string;
+  meta?: AiSourceMeta;
 };
 
 export type LifeView = {
   position: string;
-  viewpoint: string;
-  whyTheySeeItThisWay: string;
+  firstReaction: string;
+  whatTheyCareAbout: string;
+  blindSpot: string;
+  tinyStory: string;
   whatThisReveals: string;
 };
 
@@ -196,10 +207,12 @@ export type LifeLensResult = {
   lifeViews: LifeView[];
   crossDisciplinaryLens: LifeLensMiniLens[];
   takeaway: string[];
+  meta: AiSourceMeta;
 };
 
 export type LifeLensApiResponse = {
   result: LifeLensResult;
   isFallback: boolean;
   notice?: string;
+  meta?: AiSourceMeta;
 };

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { callDeepSeekJson } from "@/lib/deepseek";
 import type { CareerBridgeInput, CareerBridgeResult, Language } from "@/lib/types";
 
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 const FALLBACK_NOTICE = "当前使用本地规则版评估，未连接真实 AI。";
 const cityTypes = ["学习城市", "赚钱城市", "资源城市", "过渡城市", "跳板城市", "强跳板城市"];
 const gapPool = ["技能", "项目", "人脉", "学历", "语言", "行业入口"];
@@ -182,65 +182,51 @@ export async function POST(request: Request) {
     resources: cleanInput(body?.resources)
   };
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+  const model = process.env.DEEPSEEK_CAREER_MODEL || process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+  const deepseek = await callDeepSeekJson<Partial<CareerBridgeResult>>({
+    model,
+    maxTokens: 1200,
+    temperature: 0.7,
+    timeoutMs: 25000,
+    messages: [
+      {
+        role: "system",
+        content: "Return valid raw JSON only. Never include markdown, code fences, or explanatory text."
+      },
+      {
+        role: "user",
+        content: buildPrompt(input, language)
+      }
+    ]
+  });
 
-  if (!apiKey) {
+  if (!deepseek.ok) {
     return NextResponse.json({
       result: fallbackCareerBridge(input, language),
       isFallback: true,
-      notice: FALLBACK_NOTICE
+      notice: FALLBACK_NOTICE,
+      meta: deepseek.meta
     });
   }
 
   try {
-    const response = await fetch(DEEPSEEK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: "Return valid raw JSON only. Never include markdown, code fences, or explanatory text."
-          },
-          {
-            role: "user",
-            content: buildPrompt(input, language)
-          }
-        ],
-        temperature: 0.65
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error("DeepSeek career bridge request failed.");
-    }
-
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = data.choices?.[0]?.message?.content;
-
-    if (!content) {
-      throw new Error("DeepSeek returned empty content.");
-    }
-
-    const result = normalizeResult(parseJsonContent(content), input, language);
+    const result = normalizeResult(deepseek.data, input, language);
 
     return NextResponse.json({
       result,
-      isFallback: false
+      isFallback: false,
+      meta: deepseek.meta
     });
   } catch {
     return NextResponse.json({
       result: fallbackCareerBridge(input, language),
       isFallback: true,
-      notice: FALLBACK_NOTICE
+      notice: FALLBACK_NOTICE,
+      meta: {
+        source: "fallback",
+        model,
+        fallbackReason: "Invalid DeepSeek career bridge payload."
+      }
     });
   }
 }

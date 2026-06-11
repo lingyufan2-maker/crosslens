@@ -31,7 +31,7 @@ Then edit `.env.local`:
 
 ```bash
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_MODEL=deepseek-v4-pro
 ```
 
 Start the development server:
@@ -63,7 +63,7 @@ npm run start
 3. Put the key in `.env.local` as `DEEPSEEK_API_KEY`.
 4. Keep `.env.local` private and never commit it.
 
-The frontend never reads `DEEPSEEK_API_KEY`. It only calls `/api/analyze`. The API key is read server-side in `app/api/analyze/route.ts`.
+The frontend never reads `DEEPSEEK_API_KEY`. It only calls server API routes such as `/api/analyze`, `/api/life-lens`, and `/api/career-bridge`. The API key is read server-side only.
 
 ## Mock Mode And Real AI Mode
 
@@ -81,7 +81,7 @@ The frontend never reads `DEEPSEEK_API_KEY`. It only calls `/api/analyze`. The A
 
 ```bash
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_MODEL=deepseek-v4-pro
 ```
 
 6. Use the build command from `package.json`:

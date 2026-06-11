@@ -1,143 +1,171 @@
 import { NextResponse } from "next/server";
-import type { LifeLensResult, LifeView } from "@/lib/types";
+import { callDeepSeekJson } from "@/lib/deepseek";
+import type { AiSourceMeta, LifeLensMiniLens, LifeLensResult, LifeView } from "@/lib/types";
 
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 const FALLBACK_NOTICE = "当前为本地演示答案，未连接真实 DeepSeek。";
 
-const positions = [
-  "四年级学生",
-  "高中生",
-  "大学生",
-  "刚毕业的人",
-  "服务业工作人员",
-  "白领",
-  "自由职业者",
-  "父母",
-  "创业者",
-  "退休老人",
-  "80 岁老人",
-  "资源较少的人",
-  "资源更多的人",
-  "小城市的人",
-  "一线城市的人"
-];
-
-function pickPositions() {
-  const shuffled = [...positions].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 6);
-}
-
-function mockLifeLens(question: string): LifeLensResult {
-  const lifeViews: LifeView[] = pickPositions().map((position) => ({
-    position,
-    viewpoint: `${position}可能会先把这个问题和自己眼前最真实的压力联系起来，而不是急着找标准答案。`,
-    whyTheySeeItThisWay: "人会从自己的年龄、工作、城市和资源出发理解问题。看见的不是全部世界，而是自己能碰到的那一部分。",
-    whatThisReveals: "同一个问题背后，常常藏着不同人的机会、风险、信息差和安全感。"
-  }));
-
+function mockLifeLens(question: string, model: string, fallbackReason: string): LifeLensResult {
   return {
     question,
-    summary: "这个问题没有一个统一答案。它更像一面镜子，会照出不同人生位置的人正在担心什么、相信什么、错过什么。",
-    lifeViews,
+    summary: "这个问题不是只有一个答案。不同位置的人，可能会先看见自己的压力、机会和可承受的风险。",
+    lifeViews: [
+      {
+        position: "一个年轻人",
+        firstReaction: "可能会先想到自己还来不来得及、会不会输给同龄人。",
+        whatTheyCareAbout: "他们更在意选择会不会影响履历、机会和未来几年的方向。",
+        blindSpot: "可能低估了慢慢积累的价值，也容易把短期焦虑当成真实判断。",
+        tinyStory: "晚上刷到同学换行业的动态，他一边收藏经验帖，一边担心自己起步太晚。",
+        whatThisReveals: "年轻人的问题常常不是不知道答案，而是缺少可验证的小入口。"
+      },
+      {
+        position: "一个工作中的人",
+        firstReaction: "可能会先问：这件事会不会影响收入、晋升和每天的消耗。",
+        whatTheyCareAbout: "他们更在意现实成本，比如房租、稳定性、上司评价和可见成果。",
+        blindSpot: "可能把稳定看得太绝对，忽略了岗位内部也能做小幅转向。",
+        tinyStory: "午休时他想学新工具，但下午还有会、客户消息和月底指标。",
+        whatThisReveals: "成年人理解问题时，常常会先计算代价，而不是先谈理想。"
+      },
+      {
+        position: "一个年长的人",
+        firstReaction: "可能会想到这件事最后会不会让人更安稳、更少后悔。",
+        whatTheyCareAbout: "他们更在意身体、关系、长期安全感和人生到后面是否能承受。",
+        blindSpot: "可能不够理解年轻人面对技术、城市和竞争变化时的速度感。",
+        tinyStory: "散步时他听孩子说想换方向，第一反应不是反对，而是担心对方摔得太疼。",
+        whatThisReveals: "年长视角会提醒我们：选择不只关乎机会，也关乎可持续。"
+      },
+      {
+        position: "资源位置不同的人",
+        firstReaction: "可能会先问：我有没有人能问、钱能垫、时间能试错。",
+        whatTheyCareAbout: "他们更在意信息入口、试错成本和失败后有没有退路。",
+        blindSpot: "资源少的人可能过度保守，资源多的人可能低估别人行动有多难。",
+        tinyStory: "同样想转行，一个人能找前辈内推，另一个人只能在网上反复搜关键词。",
+        whatThisReveals: "很多选择差异不是性格差异，而是信息和退路的差异。"
+      }
+    ],
     crossDisciplinaryLens: [
       {
         lens: "心理学",
-        simpleExplanation: "人会用自己的经验解释世界，这叫认知框架，简单说就是每个人都戴着自己的眼镜。",
-        realExample: "同样是“改变”，有人看到机会，有人先想到失控。"
+        simpleExplanation: "人会用自己的经历解释问题，这叫认知框架，简单说就是每个人都戴着自己的眼镜。",
+        realExample: "同样看到改变，有人想到机会，有人先想到失控。"
       },
       {
         lens: "社会学",
-        simpleExplanation: "资源和环境会影响一个人能看见的选择，不是所有人站在同一个起点。",
-        realExample: "有人很早知道行业入口，有人到毕业才第一次听说。"
+        simpleExplanation: "资源和环境会影响一个人能看见什么选择，不是所有人都站在同一个入口前。",
+        realExample: "有人很早知道行业规则，有人到毕业才第一次听说。"
       },
       {
         lens: "经济学",
         simpleExplanation: "选择有成本。资源越少的人，越需要先考虑失败后能不能承受。",
-        realExample: "同样转行，有存款的人和没有存款的人风险完全不同。"
+        realExample: "同样换方向，有存款和没存款的人，风险完全不同。"
       }
     ],
-    takeaway: ["同一个问题，不同人生会看见不同风险。", "不要急着评判别人选择慢或保守。", "看见差异，本身就是一种信息差补课。"]
+    takeaway: ["先看见人站在哪里，再评价他的选择。", "同一个问题，常常藏着不同的风险账本。", "经验差异本身，就是一种信息差。"],
+    meta: {
+      source: "fallback",
+      model,
+      fallbackReason
+    }
   };
 }
 
-function parseJsonContent(content: string) {
-  const clean = content
-    .trim()
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```$/i, "")
-    .trim();
-
-  return JSON.parse(clean) as Partial<LifeLensResult>;
-}
-
-function normalizeResult(payload: Partial<LifeLensResult>, question: string): LifeLensResult {
-  const fallback = mockLifeLens(question);
-  const lifeViews = Array.isArray(payload.lifeViews) && payload.lifeViews.length > 0 ? payload.lifeViews : fallback.lifeViews;
-  const lenses =
-    Array.isArray(payload.crossDisciplinaryLens) && payload.crossDisciplinaryLens.length > 0
-      ? payload.crossDisciplinaryLens
-      : fallback.crossDisciplinaryLens;
-  const takeaway = Array.isArray(payload.takeaway) && payload.takeaway.length > 0 ? payload.takeaway : fallback.takeaway;
+function normalizeResult(payload: Partial<LifeLensResult>, question: string, meta: AiSourceMeta): LifeLensResult {
+  const fallback = mockLifeLens(question, meta.model, meta.fallbackReason || "Invalid DeepSeek payload.");
+  const lifeViews = normalizeLifeViews(payload.lifeViews, fallback.lifeViews);
+  const lenses = normalizeMiniLenses(payload.crossDisciplinaryLens, fallback.crossDisciplinaryLens);
+  const takeaway = normalizeStringArray(payload.takeaway, fallback.takeaway, 3);
 
   return {
-    question: payload.question || question,
-    summary: payload.summary || fallback.summary,
-    lifeViews: lifeViews.slice(0, 6).map((item) => ({
-      position: item.position || "匿名人生位置",
-      viewpoint: item.viewpoint || "这个位置的人可能会先从自己的现实处境理解这个问题。",
-      whyTheySeeItThisWay: item.whyTheySeeItThisWay || "不同经历会改变一个人看问题的入口。",
-      whatThisReveals: item.whatThisReveals || "它提醒我们，同一个问题背后可能有不同的信息差。"
-    })),
-    crossDisciplinaryLens: lenses.slice(0, 3).map((item) => ({
-      lens: item.lens || "心理学",
-      simpleExplanation: item.simpleExplanation || "用一个简单概念帮助理解这个问题。",
-      realExample: item.realExample || "现实里，不同人会因为处境不同而做出不同判断。"
-    })),
-    takeaway: takeaway.slice(0, 3)
+    question: stringValue(payload.question, question),
+    summary: stringValue(payload.summary, fallback.summary),
+    lifeViews,
+    crossDisciplinaryLens: lenses,
+    takeaway,
+    meta
   };
+}
+
+function normalizeLifeViews(value: unknown, fallback: LifeView[]) {
+  if (!Array.isArray(value) || value.length === 0) return fallback;
+
+  return value.slice(0, 4).map((item, index) => {
+    const view = typeof item === "object" && item !== null ? (item as Partial<LifeView>) : {};
+    const fallbackItem = fallback[index] || fallback[0];
+
+    return {
+      position: stringValue(view.position, fallbackItem.position),
+      firstReaction: stringValue(view.firstReaction, fallbackItem.firstReaction),
+      whatTheyCareAbout: stringValue(view.whatTheyCareAbout, fallbackItem.whatTheyCareAbout),
+      blindSpot: stringValue(view.blindSpot, fallbackItem.blindSpot),
+      tinyStory: stringValue(view.tinyStory, fallbackItem.tinyStory),
+      whatThisReveals: stringValue(view.whatThisReveals, fallbackItem.whatThisReveals)
+    };
+  });
+}
+
+function normalizeMiniLenses(value: unknown, fallback: LifeLensMiniLens[]) {
+  if (!Array.isArray(value) || value.length === 0) return fallback;
+
+  return value.slice(0, 3).map((item, index) => {
+    const lens = typeof item === "object" && item !== null ? (item as Partial<LifeLensMiniLens>) : {};
+    const fallbackItem = fallback[index] || fallback[0];
+
+    return {
+      lens: stringValue(lens.lens, fallbackItem.lens),
+      simpleExplanation: stringValue(lens.simpleExplanation, fallbackItem.simpleExplanation),
+      realExample: stringValue(lens.realExample, fallbackItem.realExample)
+    };
+  });
+}
+
+function normalizeStringArray(value: unknown, fallback: string[], limit: number) {
+  if (!Array.isArray(value)) return fallback;
+  const items = value.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim());
+  return items.length > 0 ? items.slice(0, limit) : fallback;
+}
+
+function stringValue(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
 }
 
 function buildPrompt(question: string) {
   return `你是 CrossLens 的人生视角分析 AI。
+CrossLens 是一个匿名人生经验社区。请分析同一个问题在不同人生位置里可能被怎样理解。
 
-CrossLens 是一个匿名人生经验社区。它希望让用户看见：同一个问题，不同年龄、职业、城市、资源背景的人，会看到完全不同的世界。
+用户问题：${question}
 
-请分析用户的问题，生成不同人生位置的人可能会如何理解它。
+只返回合法 JSON，不要 markdown，不要代码块。
 
-用户问题：
-${question}
+生成要求：
+- 只生成 4 个 lifeViews：一个年轻人、一个工作中的人、一个年长的人、一个城市或资源位置不同的人。
+- 每个 position 都用“可能会这样看”的方式表达，不要绝对化，不要刻板化。
+- 每个视角必须有具体生活场景，比如考试、房租、排班、晋升、身体、关系、信息入口、试错成本。
+- 语言简单，像聪明朋友解释，80% 人话，10% 简单概念，10% 行动启发。
+- crossDisciplinaryLens 只给 3 个，必须短。
+- takeaway 给 3 句，不要鸡汤。
 
-要求：
-- 不要输出标准答案。
-- 不要刻板化群体。
-- 每个视角都要具体、有人味。
-- 语言要像聪明朋友解释，不要像论文。
-- 80% 人话，10% 简单学术概念，10% 行动启发。
-- 每个 position 都用“可能会这样看”的方式表达。
-- 不要使用“穷人 / 富人”这种粗暴标签。
-- 可以使用“资源较少的人 / 资源更多的人”。
-- 每次生成 5-6 个 lifeViews。
-- lifeViews 从不同年龄、职业、城市、资源背景中选择。
-- 简单跨学科 Lens 只给 3 个，短一点。
-- 最后给 3 条 takeaway，告诉用户这个问题真正揭示了什么。
-- 不要输出 markdown，不要输出代码块，只返回合法 JSON。
+禁止使用这些万能句：
+- 把这个问题和自己眼前最真实的压力联系起来
+- 不是急着找标准答案
+- 看见的不是全部世界
+- 同一个问题背后藏着不同人的机会、风险、信息差和安全感
 
-返回严格 JSON：
+返回 JSON 结构：
 {
   "question": "",
   "summary": "",
   "lifeViews": [
     {
-      "position": "四年级学生",
-      "viewpoint": "",
-      "whyTheySeeItThisWay": "",
+      "position": "",
+      "firstReaction": "",
+      "whatTheyCareAbout": "",
+      "blindSpot": "",
+      "tinyStory": "",
       "whatThisReveals": ""
     }
   ],
   "crossDisciplinaryLens": [
     {
-      "lens": "心理学",
+      "lens": "",
       "simpleExplanation": "",
       "realExample": ""
     }
@@ -154,65 +182,40 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Question is required." }, { status: 400 });
   }
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  const model = process.env.DEEPSEEK_MODEL || "deepseek-reasoner";
+  const model = process.env.DEEPSEEK_LIFE_MODEL || process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+  const deepseek = await callDeepSeekJson<Partial<LifeLensResult>>({
+    model,
+    maxTokens: 1600,
+    temperature: 0.7,
+    timeoutMs: 25000,
+    messages: [
+      {
+        role: "system",
+        content: "只返回合法 JSON。不要 markdown，不要代码块，不要解释。"
+      },
+      {
+        role: "user",
+        content: buildPrompt(question)
+      }
+    ]
+  });
 
-  if (!apiKey) {
+  if (!deepseek.ok) {
+    const result = mockLifeLens(question, model, deepseek.meta.fallbackReason);
+
     return NextResponse.json({
-      result: mockLifeLens(question),
+      result,
       isFallback: true,
-      notice: FALLBACK_NOTICE
+      notice: FALLBACK_NOTICE,
+      meta: result.meta
     });
   }
 
-  try {
-    const modelsToTry = model === "deepseek-reasoner" ? ["deepseek-reasoner", "deepseek-chat"] : [model];
-    let response: Response | null = null;
+  const result = normalizeResult(deepseek.data, question, deepseek.meta);
 
-    for (const candidateModel of modelsToTry) {
-      response = await fetch(DEEPSEEK_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: candidateModel,
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "system",
-              content: "只返回合法 JSON。不要 markdown，不要代码块，不要解释。"
-            },
-            {
-              role: "user",
-              content: buildPrompt(question)
-            }
-          ],
-          temperature: 0.75
-        })
-      });
-
-      if (response.ok) break;
-    }
-
-    if (!response || !response.ok) throw new Error("DeepSeek life lens request failed.");
-
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error("DeepSeek returned empty content.");
-
-    return NextResponse.json({
-      result: normalizeResult(parseJsonContent(content), question),
-      isFallback: false
-    });
-  } catch {
-    return NextResponse.json({
-      result: mockLifeLens(question),
-      isFallback: true,
-      notice: FALLBACK_NOTICE
-    });
-  }
+  return NextResponse.json({
+    result,
+    isFallback: false,
+    meta: result.meta
+  });
 }

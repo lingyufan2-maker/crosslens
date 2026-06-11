@@ -388,6 +388,7 @@ export default function Home() {
   const [analysisNotice, setAnalysisNotice] = useState("");
   const [blindboxQuestion, setBlindboxQuestion] = useState("");
   const [isDrawingBlindbox, setIsDrawingBlindbox] = useState(false);
+  const [lifeLensQuestion, setLifeLensQuestion] = useState("");
   const [lifeLensResult, setLifeLensResult] = useState<LifeLensResultType | null>(null);
   const [lifeLensNotice, setLifeLensNotice] = useState("");
   const [isLifeLensLoading, setIsLifeLensLoading] = useState(false);
@@ -489,6 +490,7 @@ export default function Home() {
     if (!trimmed) return;
 
     setMode("lifeLens");
+    setLifeLensQuestion(trimmed);
     setLifeLensResult(null);
     setLifeLensNotice("");
     setIsLifeLensLoading(true);
@@ -601,24 +603,25 @@ export default function Home() {
         </header>
 
         {mode === "home" && (
-          <section className="grid flex-1 items-center gap-5 py-5 sm:gap-7 sm:py-8 lg:grid-cols-[0.92fr_1.05fr_0.92fr]">
-            <div className="max-w-xl">
-              <h1 className="text-3xl font-semibold leading-[1.04] sm:text-5xl lg:text-6xl">{t.title}</h1>
-              <p className="mt-3 max-w-lg text-sm leading-6 text-ink/70 sm:mt-5 sm:text-base sm:leading-8">{t.subtitle}</p>
-              <button
-                type="button"
-                onClick={() => setQuestionFlowRefreshKey((value) => value + 1)}
-                className="mt-4 border border-ink/15 bg-white/65 px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:border-moss hover:bg-lab"
-              >
-                {t.refreshField}
-              </button>
-            </div>
-
-            <div className="order-first lg:order-none">
+          <section className="relative flex flex-1 flex-col gap-5 py-4 sm:py-6 lg:min-h-[calc(100vh-96px)] lg:py-0">
+            <div className="relative order-first h-[320px] w-full lg:absolute lg:left-0 lg:top-1/2 lg:h-[min(82vh,760px)] lg:w-[min(52vw,820px)] lg:-translate-y-1/2">
               <FoldingPrism />
             </div>
 
-            <div className="grid gap-2 sm:gap-3">
+            <div className="relative z-20 w-full lg:ml-[58vw] lg:flex lg:min-h-[calc(100vh-120px)] lg:w-[min(38vw,580px)] lg:flex-col lg:justify-center">
+              <div className="max-w-xl">
+                <h1 className="text-3xl font-semibold leading-[1.04] sm:text-5xl lg:text-6xl">{t.title}</h1>
+                <p className="mt-3 max-w-lg text-sm leading-6 text-ink/70 sm:mt-5 sm:text-base sm:leading-8">{t.subtitle}</p>
+                <button
+                  type="button"
+                  onClick={() => setQuestionFlowRefreshKey((value) => value + 1)}
+                  className="mt-4 border border-ink/15 bg-white/75 px-4 py-2 text-sm font-semibold text-ink shadow-sm backdrop-blur transition hover:border-moss hover:bg-lab"
+                >
+                  {t.refreshField}
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-2 sm:gap-3">
               <ActionPanel title={t.fullRandom} description={t.fullRandomHint} marker="01" onClick={drawQuestionBlindbox} />
               <ActionPanel
                 title={t.guidedRandom}
@@ -682,6 +685,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
+            </div>
           </section>
         )}
 
@@ -725,8 +729,18 @@ export default function Home() {
 
         {mode === "lifeLens" && !lifeLensResult && (
           <section className="grid flex-1 place-items-center py-8">
-            <div className="w-full border border-moss/25 bg-lab p-5 text-center text-sm font-semibold text-moss shadow-soft sm:max-w-md">
-              {isLifeLensLoading ? t.loading : lifeLensNotice || t.loading}
+            <div className="w-full max-w-2xl rounded-md border border-moss/25 bg-lab/85 p-5 shadow-soft sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-copper">你抽到的问题</p>
+              <h1 className="mt-3 text-2xl font-semibold leading-tight text-ink">{lifeLensQuestion || blindboxQuestion || customQuestion}</h1>
+              {isLifeLensLoading ? (
+                <div className="mt-5 grid gap-2 text-sm font-semibold text-moss">
+                  <p className="rounded-md bg-white/65 p-3">正在生成不同人生视角...</p>
+                  <p className="rounded-md bg-white/65 p-3">正在寻找四个不同位置...</p>
+                  <p className="rounded-md bg-white/65 p-3">正在用跨学科 Lens 拆开问题...</p>
+                </div>
+              ) : (
+                <p className="mt-5 rounded-md bg-white/65 p-3 text-sm font-semibold text-moss">{lifeLensNotice || t.loading}</p>
+              )}
             </div>
           </section>
         )}

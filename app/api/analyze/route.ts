@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { callDeepSeekJson } from "@/lib/deepseek";
 import { lensMeta, mockAIAnalysis } from "@/lib/mockAi";
 import type { Analysis, CrossLensApiAnalysis, DeepSeekAnalysisPayload, Language, LensActionItem, LensCode, Question } from "@/lib/types";
 
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 const FALLBACK_NOTICE = "当前为本地演示答案，未连接真实 DeepSeek。";
 
 const lensCodes: LensCode[] = ["SELF", "SOC", "MKT", "PROD", "TECH", "ETH", "CAREER", "ID", "COMM", "EXEC"];
@@ -377,63 +377,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Question is required." }, { status: 400 });
   }
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+  const model = process.env.DEEPSEEK_ANALYZE_MODEL || process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+  const deepseek = await callDeepSeekJson<DeepSeekAnalysisPayload>({
+    model,
+    maxTokens: 2200,
+    temperature: 0.7,
+    timeoutMs: 30000,
+    messages: [
+      {
+        role: "system",
+        content: "Return valid raw JSON only. Never include markdown, code fences, or explanatory text."
+      },
+      {
+        role: "user",
+        content: buildPrompt(question, language)
+      }
+    ]
+  });
 
-  if (!apiKey) {
+  if (!deepseek.ok) {
     return fallbackAnalysis(question, language, body?.sourceQuestion);
   }
 
   try {
-    const response = await fetch(DEEPSEEK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: "Return valid raw JSON only. Never include markdown, code fences, or explanatory text."
-          },
-          {
-            role: "user",
-            content: buildPrompt(question, language)
-          }
-        ],
-        temperature: 0.7
-      })
-    });
+    console.log("[CrossLens analyze] DeepSeek parsed response:", deepseek.data);
 
-    if (!response.ok) {
-      return fallbackAnalysis(question, language, body?.sourceQuestion);
-    }
-
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = data.choices?.[0]?.message?.content;
-    console.log("[CrossLens analyze] DeepSeek raw response:", content ?? data);
-
-    if (!content) {
-      return fallbackAnalysis(question, language, body?.sourceQuestion);
-    }
-
-    const payload = tryParseJsonContent(content);
-
-    if (!payload) {
-      return fallbackAnalysis(question, language, body?.sourceQuestion);
-    }
-
-    const finalAnalysis = normalizeDeepSeekPayload(payload, question, language);
+    const finalAnalysis = normalizeDeepSeekPayload(deepseek.data, question, language);
     console.log("[CrossLens analyze] Final response shape:", describeShape(finalAnalysis));
 
     return NextResponse.json({
       analysis: finalAnalysis,
-      isFallback: false
+      isFallback: false,
+      meta: deepseek.meta
     });
   } catch {
     return fallbackAnalysis(question, language, body?.sourceQuestion);

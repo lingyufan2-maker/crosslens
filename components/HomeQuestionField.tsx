@@ -57,7 +57,7 @@ export default function HomeQuestionField({ refreshKey = 0, boostKey = 0 }: { re
       const { width, height, isMobile } = sizeRef.current;
       if (!width || !height) return;
 
-      const count = isMobile ? 40 : 82;
+      const count = isMobile ? 36 : 72;
       const pool = questionsRef.current.length > 0 ? questionsRef.current : fallbackQuestions;
 
       itemsRef.current = Array.from({ length: count }, (_, index) => {
@@ -197,12 +197,12 @@ function pickDepth(): Depth {
 
 function depthMetrics(depth: Depth) {
   if (depth === "near") {
-    return { fontSize: [20, 28], opacity: [0.48, 0.68], speed: [0.45, 0.75], color: "#435242", blur: 0 };
+    return { fontSize: [20, 28], opacity: [0.32, 0.5], speed: [0.45, 0.75], color: "#435242", blur: 0 };
   }
   if (depth === "mid") {
-    return { fontSize: [15, 18], opacity: [0.28, 0.45], speed: [0.25, 0.45], color: "#8b927c", blur: 0 };
+    return { fontSize: [15, 18], opacity: [0.2, 0.34], speed: [0.25, 0.45], color: "#8b927c", blur: 0 };
   }
-  return { fontSize: [12, 14], opacity: [0.14, 0.22], speed: [0.12, 0.25], color: "#d8d0bd", blur: 1 };
+  return { fontSize: [12, 14], opacity: [0.1, 0.18], speed: [0.12, 0.25], color: "#d8d0bd", blur: 1 };
 }
 
 function centerDensityFade(x: number, y: number, width: number, height: number) {
