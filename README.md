@@ -33,7 +33,7 @@ Then edit `.env.local`:
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_LIFE_MODEL=deepseek-v4-flash
-DEEPSEEK_ANALYZE_MODEL=deepseek-v4-flash
+DEEPSEEK_ANALYZE_MODEL=deepseek-v4-pro
 DEEPSEEK_CAREER_MODEL=deepseek-v4-flash
 ```
 
@@ -76,6 +76,23 @@ To test whether DeepSeek is reachable from the deployed app, open:
 
 It uses `DEEPSEEK_LIFE_MODEL` or `deepseek-v4-flash`, disables thinking, and returns latency plus any failure reason.
 
+## DeepSeek Model Timeout Strategy
+
+CrossLens never waits forever. Server routes automatically choose timeout by model:
+
+- Any model name containing `pro`: waits up to `580000ms` so the route has time to return fallback before Vercel reaches 600 seconds.
+- Life Lens with flash models: `15000ms`.
+- Analyze with flash models: `22000ms`.
+- Career Bridge with flash models: `18000ms`.
+
+If you want Life Lens to use the pro model, set:
+
+```bash
+DEEPSEEK_LIFE_MODEL=deepseek-v4-pro
+```
+
+If your Vercel plan rejects `maxDuration = 600`, change `maxDuration` to `300` in the API route files and redeploy.
+
 ## Mock Mode And Real AI Mode
 
 - Mock mode: If `DEEPSEEK_API_KEY` is missing, CrossLens automatically uses `mockAIAnalysis` and shows `当前为本地演示答案，未连接真实 DeepSeek。`
@@ -94,7 +111,7 @@ It uses `DEEPSEEK_LIFE_MODEL` or `deepseek-v4-flash`, disables thinking, and ret
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_LIFE_MODEL=deepseek-v4-flash
-DEEPSEEK_ANALYZE_MODEL=deepseek-v4-flash
+DEEPSEEK_ANALYZE_MODEL=deepseek-v4-pro
 DEEPSEEK_CAREER_MODEL=deepseek-v4-flash
 ```
 

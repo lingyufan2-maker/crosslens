@@ -9,6 +9,7 @@ type CallDeepSeekJsonInput = {
   maxTokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  routeType?: "life-lens" | "analyze" | "career";
   thinking?: "enabled" | "disabled";
   reasoningEffort?: "high";
 };
@@ -41,18 +42,20 @@ export async function callDeepSeekJson<T>({
   model = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
   maxTokens = 1800,
   temperature = 0.7,
-  timeoutMs = 25000,
+  timeoutMs,
+  routeType,
   thinking = "disabled",
   reasoningEffort
 }: CallDeepSeekJsonInput): Promise<DeepSeekJsonResult<T>> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
+  const effectiveTimeoutMs = timeoutMs ?? getDeepSeekTimeout(model, routeType);
 
   if (!apiKey) {
     return fail("Missing DEEPSEEK_API_KEY", model, null);
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const timeout = setTimeout(() => controller.abort(), effectiveTimeoutMs);
 
   try {
     const requestBody: Record<string, unknown> = {
@@ -132,7 +135,7 @@ export async function callDeepSeekJson<T>({
   } catch (error) {
     const reason =
       error instanceof Error && error.name === "AbortError"
-        ? `DeepSeek timeout after ${timeoutMs}ms`
+        ? `DeepSeek timeout after ${effectiveTimeoutMs}ms`
         : error instanceof Error
           ? error.message
           : "Unknown DeepSeek error.";
@@ -140,6 +143,28 @@ export async function callDeepSeekJson<T>({
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export function getDeepSeekTimeout(model: string, routeType?: "life-lens" | "analyze" | "career") {
+  const isPro = model.includes("pro");
+
+  if (isPro) {
+    return 580000;
+  }
+
+  if (routeType === "life-lens") {
+    return 15000;
+  }
+
+  if (routeType === "analyze") {
+    return 22000;
+  }
+
+  if (routeType === "career") {
+    return 18000;
+  }
+
+  return 20000;
 }
 
 function fail<T>(reason: string, model: string, status: number | null, errorBody = ""): DeepSeekJsonResult<T> {

@@ -6,6 +6,7 @@ import type { AiSourceMeta, Analysis, CrossLensApiAnalysis, DeepSeekAnalysisPayl
 const FALLBACK_NOTICE = "当前为本地演示答案，未连接真实 DeepSeek。";
 
 export const runtime = "nodejs";
+export const maxDuration = 600;
 export const preferredRegion = "iad1";
 
 const lensCodes: LensCode[] = ["SELF", "SOC", "MKT", "PROD", "TECH", "ETH", "CAREER", "ID", "COMM", "EXEC"];
@@ -393,7 +394,7 @@ export async function POST(request: Request) {
     model,
     maxTokens: 2800,
     temperature: 0.7,
-    timeoutMs: 22000,
+    routeType: "analyze",
     thinking: "disabled",
     messages: [
       {

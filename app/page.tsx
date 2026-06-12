@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { adjacentCategories, categories, questions } from "@/data/questions";
 import { randomBlindboxQuestions } from "@/data/randomBlindboxQuestions";
 import { lensMeta } from "@/lib/mockAi";
@@ -211,6 +211,80 @@ function deepSeekDebugNotice(meta?: AiSourceMeta, fallbackText = "当前为本�
   ].join("\n");
 }
 
+function localLifeLensFallback(question: string, fallbackReason: string): LifeLensResultType {
+  return {
+    question,
+    summary: "同一个问题会被不同坐标系重新解释：有人看能力，有人看资源，有人看边界。",
+    lifeViews: [
+      {
+        lensTitle: "专业维度",
+        hiddenPosition: "一个习惯用专业能力衡量关系的人",
+        spokenLine: "我会先把这件事拆开看。对方在某个领域厉害，不代表他在所有事情上都比你高。你也有自己的主场，只是这次场景不一定轮到你展示。",
+        whatThisLensSees: "它看见的是具体能力，而不是笼统的高低比较。",
+        whyTheyThinkThisWay: "这种人更相信专业分工，知道每个人的优势要放在具体场景里看。",
+        whatItProtects: "它保护自我价值感，不让你被别人的光环压住。",
+        whatItMayMiss: "它可能低估现实里的资源、人脉和平台差距。",
+        crossLensInsight: "这是一种反符号崇拜的视角：承认别人厉害，但不把优势扩大成人格等级。"
+      },
+      {
+        lensTitle: "资源维度",
+        hiddenPosition: "一个习惯从机会入口看事情的人",
+        spokenLine: "别急着比较谁更厉害。你能接触到这件事，本身可能就是一个入口。关键不是焦虑，而是能不能把它变成作品、信任或下一次机会。",
+        whatThisLensSees: "它看见一次接触背后的机会入口。",
+        whyTheyThinkThisWay: "这种人通常经历过信息差，知道机会常常藏在具体连接里。",
+        whatItProtects: "它保护机会感和行动动力。",
+        whatItMayMiss: "它可能把关系过度工具化，忽略当下真实感受。",
+        crossLensInsight: "资源视角提醒你：很多机会不是正式邀请，而是一次足够好的交付。"
+      },
+      {
+        lensTitle: "关系边界",
+        hiddenPosition: "一个对关系位置很敏感的人",
+        spokenLine: "你可以欣赏别人，但不用自动把自己放低。关系里有差距很正常，重要的是知道自己在提供什么，也知道哪里该靠近、哪里要保留边界。",
+        whatThisLensSees: "它看见关系里的位置、边界和不平等。",
+        whyTheyThinkThisWay: "这种人可能见过身份、金钱或平台如何影响互动。",
+        whatItProtects: "它保护边界感和不被权威压倒的能力。",
+        whatItMayMiss: "它可能让人过度警惕，错过轻松合作的空间。",
+        crossLensInsight: "边界不是疏远，而是让尊重和合作同时成立。"
+      },
+      {
+        lensTitle: "长期主义",
+        hiddenPosition: "一个把每次接触都看成积累的人",
+        spokenLine: "我不会只看这一次有没有结果。我会问：这件事能不能留下一个作品、一段经验、一个联系人，或者让我下次做得更好一点。",
+        whatThisLensSees: "它看见一次经历可以如何沉淀成长期资产。",
+        whyTheyThinkThisWay: "这种人更习惯把行动放进时间线里，而不是只看当下输赢。",
+        whatItProtects: "它保护耐心和持续行动的能力。",
+        whatItMayMiss: "它可能忽略短期情绪和现实压力。",
+        crossLensInsight: "长期主义不是忍耐，而是把一次经历变成下一次的筹码。"
+      }
+    ],
+    crossDisciplinaryLens: [
+      {
+        lens: "心理学",
+        simpleExplanation: "自我价值感会影响你如何解释差距。",
+        realExample: "同样见到厉害的人，有人学习，有人自卑，有人转向行动。"
+      },
+      {
+        lens: "社会学",
+        simpleExplanation: "社会会把资源和职业包装成成功符号。",
+        realExample: "名校、金融、大城市标签很容易让人自动抬高对方。"
+      },
+      {
+        lens: "职业发展",
+        simpleExplanation: "机会常常来自稳定交付和可展示作品。",
+        realExample: "一次拍摄、一次合作、一次表达，都可能变成后续信任。"
+      }
+    ],
+    takeaway: ["别把别人的主场误认为你的低位。", "先看见差距，再决定怎么行动。", "能留下作品和经验的接触，才真正属于你。"],
+    meta: {
+      source: "fallback",
+      model: "local",
+      fallbackReason,
+      status: null,
+      errorBody: ""
+    }
+  };
+}
+
 function questionText(question: Question, language: Language) {
   return language === "cn" ? question.question_cn : question.question_en;
 }
@@ -413,6 +487,8 @@ export default function Home() {
   const [questionFlowRefreshKey, setQuestionFlowRefreshKey] = useState(0);
   const [questionFlowBoostKey, setQuestionFlowBoostKey] = useState(0);
   const [prismDrawKey, setPrismDrawKey] = useState(0);
+  const lifeLensAbortRef = useRef<AbortController | null>(null);
+  const lifeLensCancelReasonRef = useRef("");
 
   const t = copy[language];
 
@@ -441,13 +517,14 @@ export default function Home() {
     return (await response.json()) as AnalyzeApiResponse;
   }
 
-  async function requestLifeLens(question: string) {
+  async function requestLifeLens(question: string, signal?: AbortSignal) {
     const response = await fetch("/api/life-lens", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question }),
+      signal
     });
 
     if (!response.ok) {
@@ -519,35 +596,52 @@ export default function Home() {
     setLifeLensNotice("");
     setLifeLensWaitMessage("");
     setIsLifeLensLoading(true);
+    lifeLensAbortRef.current?.abort();
+    lifeLensCancelReasonRef.current = "";
+    const controller = new AbortController();
+    lifeLensAbortRef.current = controller;
 
     const slowTimer = window.setTimeout(() => {
-      setLifeLensWaitMessage("还在生成不同理解维度，稍等一下……");
+      setLifeLensWaitMessage("DeepSeek Pro 正在生成，可能需要更久一点……");
     }, 8000);
     const verySlowTimer = window.setTimeout(() => {
-      setLifeLensWaitMessage("这次 AI 有点慢，如果失败会先给你本地示例。");
-    }, 16000);
+      setLifeLensWaitMessage("Pro 模型还在生成。你可以继续等，也可以稍后重试。");
+    }, 30000);
+    const longWaitTimer = window.setTimeout(() => {
+      setLifeLensWaitMessage("这次请求已经比较久了，如果模型没有返回，系统会在超时后给你本地示例。");
+    }, 120000);
 
     try {
-      const data = await requestLifeLens(trimmed);
+      const data = await requestLifeLens(trimmed, controller.signal);
       setLifeLensResult(data.result);
       setLifeLensNotice(data.isFallback ? deepSeekDebugNotice(data.meta ?? data.result.meta, data.notice ?? "当前为本地演示答案，未连接真实 DeepSeek。") : "");
     } catch (error) {
-      const reason = error instanceof Error ? error.message : "Unknown frontend life lens request error.";
-      setLifeLensNotice(
-        deepSeekDebugNotice({
-          source: "fallback",
-          model: "unknown",
-          fallbackReason: reason,
-          status: null,
-          errorBody: ""
-        })
-      );
+      const reason = lifeLensCancelReasonRef.current || (error instanceof Error ? error.message : "Unknown frontend life lens request error.");
+      const fallback = localLifeLensFallback(trimmed, reason);
+      setLifeLensResult(fallback);
+      setLifeLensNotice(deepSeekDebugNotice(fallback.meta));
     } finally {
       window.clearTimeout(slowTimer);
       window.clearTimeout(verySlowTimer);
+      window.clearTimeout(longWaitTimer);
       setIsLifeLensLoading(false);
       setLifeLensWaitMessage("");
+      if (lifeLensAbortRef.current === controller) {
+        lifeLensAbortRef.current = null;
+      }
     }
+  }
+
+  function cancelLifeLensWait() {
+    const question = lifeLensQuestion || blindboxQuestion || customQuestion || "这个问题为什么会有不同理解？";
+    const reason = "用户取消等待，已显示本地示例";
+    lifeLensCancelReasonRef.current = reason;
+    lifeLensAbortRef.current?.abort();
+    const fallback = localLifeLensFallback(question, reason);
+    setLifeLensResult(fallback);
+    setLifeLensNotice(deepSeekDebugNotice(fallback.meta));
+    setIsLifeLensLoading(false);
+    setLifeLensWaitMessage("");
   }
 
   function openCareerStoryLens() {
@@ -833,10 +927,17 @@ export default function Home() {
               <h1 className="mt-3 text-2xl font-semibold leading-tight text-ink">{lifeLensQuestion || blindboxQuestion || customQuestion}</h1>
               {isLifeLensLoading ? (
                 <div className="mt-5 grid gap-2 text-sm font-semibold text-moss">
-                  <p className="rounded-md bg-white/65 p-3">正在生成不同人生视角...</p>
-                  <p className="rounded-md bg-white/65 p-3">正在寻找四个不同位置...</p>
-                  <p className="rounded-md bg-white/65 p-3">正在用跨学科 Lens 拆开问题...</p>
+                  <p className="rounded-md bg-white/65 p-3">正在生成不同理解维度……</p>
+                  <p className="rounded-md bg-white/65 p-3">正在把同一个问题放进不同认知坐标系里。</p>
+                  <p className="rounded-md bg-white/65 p-3">如果你使用 DeepSeek Pro，等待时间可能更长。</p>
                   {lifeLensWaitMessage && <p className="rounded-md border border-copper/25 bg-white/80 p-3 text-copper">{lifeLensWaitMessage}</p>}
+                  <button
+                    type="button"
+                    onClick={cancelLifeLensWait}
+                    className="mt-2 rounded-md border border-ink/15 bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:border-moss hover:text-moss"
+                  >
+                    取消等待，先看本地示例
+                  </button>
                 </div>
               ) : (
                 <p className="mt-5 whitespace-pre-line rounded-md bg-white/65 p-3 text-sm font-semibold text-moss">{lifeLensNotice || t.loading}</p>

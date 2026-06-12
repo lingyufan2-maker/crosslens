@@ -5,6 +5,7 @@ import type { AiSourceMeta, LifeLensMiniLens, LifeLensResult, LifeView } from "@
 const FALLBACK_NOTICE = "当前为本地演示答案，未连接真实 DeepSeek。";
 
 export const runtime = "nodejs";
+export const maxDuration = 600;
 export const preferredRegion = "iad1";
 
 function mockLifeLens(question: string, model: string, fallbackReason: string, meta?: Partial<AiSourceMeta>): LifeLensResult {
@@ -267,7 +268,7 @@ export async function POST(request: Request) {
     model,
     maxTokens: 900,
     temperature: 0.82,
-    timeoutMs: 15000,
+    routeType: "life-lens",
     thinking: "disabled",
     messages: [
       {

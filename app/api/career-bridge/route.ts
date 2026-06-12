@@ -7,6 +7,7 @@ const cityTypes = ["学习城市", "赚钱城市", "资源城市", "过渡城市
 const gapPool = ["技能", "项目", "人脉", "学历", "语言", "行业入口"];
 
 export const runtime = "nodejs";
+export const maxDuration = 600;
 export const preferredRegion = "iad1";
 
 function cleanInput(value: unknown) {
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
     model,
     maxTokens: 1800,
     temperature: 0.75,
-    timeoutMs: 18000,
+    routeType: "career",
     thinking: "disabled",
     messages: [
       {
