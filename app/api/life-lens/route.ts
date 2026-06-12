@@ -219,12 +219,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Question is required." }, { status: 400 });
   }
 
-  const model = process.env.DEEPSEEK_LIFE_MODEL || process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+  const model = process.env.DEEPSEEK_LIFE_MODEL || "deepseek-v4-flash";
   const deepseek = await callDeepSeekJson<Partial<LifeLensResult>>({
     model,
-    maxTokens: 2200,
-    temperature: 0.7,
-    timeoutMs: 25000,
+    maxTokens: 1600,
+    temperature: 0.85,
+    timeoutMs: 18000,
+    thinking: "disabled",
     messages: [
       {
         role: "system",

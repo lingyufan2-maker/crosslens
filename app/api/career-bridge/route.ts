@@ -185,12 +185,13 @@ export async function POST(request: Request) {
     resources: cleanInput(body?.resources)
   };
 
-  const model = process.env.DEEPSEEK_CAREER_MODEL || process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
+  const model = process.env.DEEPSEEK_CAREER_MODEL || "deepseek-v4-flash";
   const deepseek = await callDeepSeekJson<Partial<CareerBridgeResult>>({
     model,
-    maxTokens: 1200,
-    temperature: 0.7,
-    timeoutMs: 25000,
+    maxTokens: 1800,
+    temperature: 0.75,
+    timeoutMs: 22000,
+    thinking: "disabled",
     messages: [
       {
         role: "system",

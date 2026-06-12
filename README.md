@@ -31,7 +31,10 @@ Then edit `.env.local`:
 
 ```bash
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
-DEEPSEEK_MODEL=deepseek-v4-pro
+DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_LIFE_MODEL=deepseek-v4-flash
+DEEPSEEK_ANALYZE_MODEL=deepseek-v4-pro
+DEEPSEEK_CAREER_MODEL=deepseek-v4-flash
 ```
 
 Start the development server:
@@ -81,7 +84,10 @@ The frontend never reads `DEEPSEEK_API_KEY`. It only calls server API routes suc
 
 ```bash
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
-DEEPSEEK_MODEL=deepseek-v4-pro
+DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_LIFE_MODEL=deepseek-v4-flash
+DEEPSEEK_ANALYZE_MODEL=deepseek-v4-pro
+DEEPSEEK_CAREER_MODEL=deepseek-v4-flash
 ```
 
 6. Use the build command from `package.json`:

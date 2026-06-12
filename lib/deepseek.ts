@@ -9,6 +9,8 @@ type CallDeepSeekJsonInput = {
   maxTokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  thinking?: "enabled" | "disabled";
+  reasoningEffort?: "high";
 };
 
 type DeepSeekMeta = {
@@ -36,10 +38,12 @@ const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
 
 export async function callDeepSeekJson<T>({
   messages,
-  model = process.env.DEEPSEEK_MODEL || "deepseek-v4-pro",
+  model = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
   maxTokens = 1800,
   temperature = 0.7,
-  timeoutMs = 25000
+  timeoutMs = 25000,
+  thinking = "disabled",
+  reasoningEffort
 }: CallDeepSeekJsonInput): Promise<DeepSeekJsonResult<T>> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
@@ -51,22 +55,27 @@ export async function callDeepSeekJson<T>({
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    const requestBody: Record<string, unknown> = {
+      model,
+      messages,
+      thinking: { type: thinking },
+      temperature,
+      max_tokens: maxTokens,
+      stream: false,
+      response_format: { type: "json_object" }
+    };
+
+    if (thinking === "enabled" && reasoningEffort) {
+      requestBody.reasoning_effort = reasoningEffort;
+    }
+
     const response = await fetch(DEEPSEEK_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        thinking: { type: "enabled" },
-        reasoning_effort: "high",
-        temperature,
-        max_tokens: maxTokens,
-        stream: false,
-        response_format: { type: "json_object" },
-      }),
+      body: JSON.stringify(requestBody),
       signal: controller.signal
     });
 
@@ -117,7 +126,7 @@ export async function callDeepSeekJson<T>({
       meta: {
         source: "deepseek",
         model,
-        reasoning: "high"
+        ...(thinking === "enabled" && reasoningEffort ? { reasoning: reasoningEffort } : {})
       }
     };
   } catch (error) {

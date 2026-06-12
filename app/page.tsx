@@ -406,6 +406,7 @@ export default function Home() {
   const [lifeLensResult, setLifeLensResult] = useState<LifeLensResultType | null>(null);
   const [lifeLensNotice, setLifeLensNotice] = useState("");
   const [isLifeLensLoading, setIsLifeLensLoading] = useState(false);
+  const [lifeLensWaitMessage, setLifeLensWaitMessage] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [inputWarning, setInputWarning] = useState("");
   const [copied, setCopied] = useState(false);
@@ -516,7 +517,15 @@ export default function Home() {
     setLifeLensQuestion(trimmed);
     setLifeLensResult(null);
     setLifeLensNotice("");
+    setLifeLensWaitMessage("");
     setIsLifeLensLoading(true);
+
+    const slowTimer = window.setTimeout(() => {
+      setLifeLensWaitMessage("还在生成不同理解维度，稍等一下……");
+    }, 8000);
+    const verySlowTimer = window.setTimeout(() => {
+      setLifeLensWaitMessage("这次 AI 有点慢，如果失败会先给你本地示例。");
+    }, 16000);
 
     try {
       const data = await requestLifeLens(trimmed);
@@ -534,7 +543,10 @@ export default function Home() {
         })
       );
     } finally {
+      window.clearTimeout(slowTimer);
+      window.clearTimeout(verySlowTimer);
       setIsLifeLensLoading(false);
+      setLifeLensWaitMessage("");
     }
   }
 
@@ -822,6 +834,7 @@ export default function Home() {
                   <p className="rounded-md bg-white/65 p-3">正在生成不同人生视角...</p>
                   <p className="rounded-md bg-white/65 p-3">正在寻找四个不同位置...</p>
                   <p className="rounded-md bg-white/65 p-3">正在用跨学科 Lens 拆开问题...</p>
+                  {lifeLensWaitMessage && <p className="rounded-md border border-copper/25 bg-white/80 p-3 text-copper">{lifeLensWaitMessage}</p>}
                 </div>
               ) : (
                 <p className="mt-5 whitespace-pre-line rounded-md bg-white/65 p-3 text-sm font-semibold text-moss">{lifeLensNotice || t.loading}</p>
