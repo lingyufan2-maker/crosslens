@@ -22,7 +22,7 @@ export default function LifeLensResult({
 
   return (
     <section className="mx-auto w-full max-w-[1180px] py-5 sm:py-7">
-      {notice && <p className="mb-4 rounded-md border border-copper/25 bg-white/80 p-3 text-sm font-semibold text-copper">{notice}</p>}
+      {notice && <p className="mb-4 whitespace-pre-line rounded-md border border-copper/25 bg-white/80 p-3 text-sm font-semibold text-copper">{notice}</p>}
 
       <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold text-ink/62">
         <span className="rounded-full border border-moss/15 bg-white/70 px-3 py-1">AI source: {meta?.source ?? "unknown"}</span>

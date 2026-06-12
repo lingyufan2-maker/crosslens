@@ -4,7 +4,10 @@ import type { AiSourceMeta, LifeLensMiniLens, LifeLensResult, LifeView } from "@
 
 const FALLBACK_NOTICE = "当前为本地演示答案，未连接真实 DeepSeek。";
 
-function mockLifeLens(question: string, model: string, fallbackReason: string): LifeLensResult {
+export const runtime = "nodejs";
+export const preferredRegion = "iad1";
+
+function mockLifeLens(question: string, model: string, fallbackReason: string, meta?: Partial<AiSourceMeta>): LifeLensResult {
   return {
     question,
     summary: "这个问题不是只有一个答案。不同位置的人，可能会先看见自己的压力、机会和可承受的风险。",
@@ -63,13 +66,15 @@ function mockLifeLens(question: string, model: string, fallbackReason: string): 
     meta: {
       source: "fallback",
       model,
-      fallbackReason
+      fallbackReason,
+      status: meta?.status ?? null,
+      errorBody: meta?.errorBody ?? ""
     }
   };
 }
 
 function normalizeResult(payload: Partial<LifeLensResult>, question: string, meta: AiSourceMeta): LifeLensResult {
-  const fallback = mockLifeLens(question, meta.model, meta.fallbackReason || "Invalid DeepSeek payload.");
+  const fallback = mockLifeLens(question, meta.model, meta.fallbackReason || "Invalid DeepSeek payload.", meta);
   const lifeViews = normalizeLifeViews(payload.lifeViews, fallback.lifeViews);
   const lenses = normalizeMiniLenses(payload.crossDisciplinaryLens, fallback.crossDisciplinaryLens);
   const takeaway = normalizeStringArray(payload.takeaway, fallback.takeaway, 3);
@@ -201,7 +206,7 @@ export async function POST(request: Request) {
   });
 
   if (!deepseek.ok) {
-    const result = mockLifeLens(question, model, deepseek.meta.fallbackReason);
+    const result = mockLifeLens(question, model, deepseek.meta.fallbackReason, deepseek.meta);
 
     return NextResponse.json({
       result,

@@ -75,6 +75,8 @@ export type AiSourceMeta = {
   source: "deepseek" | "fallback";
   model: string;
   fallbackReason?: string;
+  status?: number | null;
+  errorBody?: string;
   reasoning?: "high";
 };
 

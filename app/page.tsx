@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { adjacentCategories, categories, questions } from "@/data/questions";
 import { randomBlindboxQuestions } from "@/data/randomBlindboxQuestions";
@@ -7,6 +8,7 @@ import { lensMeta } from "@/lib/mockAi";
 import type {
   Analysis,
   AnalyzeApiResponse,
+  AiSourceMeta,
   Category,
   CrossLensApiAnalysis,
   ChallengeItem,
@@ -20,8 +22,9 @@ import type {
 } from "@/lib/types";
 import HomeQuestionField from "@/components/HomeQuestionField";
 import FoldingPrism from "@/components/FoldingPrism";
-import CareerActionLab from "@/components/CareerActionLab";
-import LifeLensResult from "@/components/LifeLensResult";
+
+const CareerActionLab = dynamic(() => import("@/components/CareerActionLab"), { ssr: false });
+const LifeLensResult = dynamic(() => import("@/components/LifeLensResult"), { ssr: false });
 
 type Mode = "home" | "guided" | "blindbox" | "lifeLens" | "analysis";
 type DrawMode = "full" | "guided" | "custom";
@@ -195,6 +198,17 @@ const copy = {
 
 function randomFrom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function deepSeekDebugNotice(meta?: AiSourceMeta, fallbackText = "当前为本地演示答案，未连接真实 DeepSeek。") {
+  if (!meta || meta.source === "deepseek") return "";
+
+  return [
+    fallbackText,
+    `原因：${meta.fallbackReason || "未知原因"}`,
+    `模型：${meta.model || "unknown"}`,
+    `状态码：${meta.status ?? "null"}`
+  ].join("\n");
 }
 
 function questionText(question: Question, language: Language) {
@@ -453,9 +467,18 @@ export default function Home() {
     try {
       const result = await requestAnalysis(question, targetLanguage, sourceQuestion);
       setAnalysis(apiAnalysisToUiAnalysis(result.analysis, targetLanguage));
-      setAnalysisNotice(result.isFallback ? result.notice ?? "当前为本地演示答案，未连接真实 DeepSeek。" : "");
-    } catch {
-      setAnalysisNotice("当前为本地演示答案，未连接真实 DeepSeek。");
+      setAnalysisNotice(result.isFallback ? deepSeekDebugNotice(result.meta, result.notice ?? "当前为本地演示答案，未连接真实 DeepSeek。") : "");
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown frontend analyze request error.";
+      setAnalysisNotice(
+        deepSeekDebugNotice({
+          source: "fallback",
+          model: "unknown",
+          fallbackReason: reason,
+          status: null,
+          errorBody: ""
+        })
+      );
     } finally {
       setIsAnalyzing(false);
     }
@@ -498,9 +521,18 @@ export default function Home() {
     try {
       const data = await requestLifeLens(trimmed);
       setLifeLensResult(data.result);
-      setLifeLensNotice(data.isFallback ? data.notice ?? "当前为本地演示答案，未连接真实 DeepSeek。" : "");
-    } catch {
-      setLifeLensNotice("当前为本地演示答案，未连接真实 DeepSeek。");
+      setLifeLensNotice(data.isFallback ? deepSeekDebugNotice(data.meta ?? data.result.meta, data.notice ?? "当前为本地演示答案，未连接真实 DeepSeek。") : "");
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown frontend life lens request error.";
+      setLifeLensNotice(
+        deepSeekDebugNotice({
+          source: "fallback",
+          model: "unknown",
+          fallbackReason: reason,
+          status: null,
+          errorBody: ""
+        })
+      );
     } finally {
       setIsLifeLensLoading(false);
     }
@@ -792,7 +824,7 @@ export default function Home() {
                   <p className="rounded-md bg-white/65 p-3">正在用跨学科 Lens 拆开问题...</p>
                 </div>
               ) : (
-                <p className="mt-5 rounded-md bg-white/65 p-3 text-sm font-semibold text-moss">{lifeLensNotice || t.loading}</p>
+                <p className="mt-5 whitespace-pre-line rounded-md bg-white/65 p-3 text-sm font-semibold text-moss">{lifeLensNotice || t.loading}</p>
               )}
             </div>
           </section>
@@ -940,7 +972,7 @@ function AnalysisView({
   return (
     <section className="mx-auto w-full max-w-[1180px] py-5 sm:py-7">
       {notice && (
-        <div className="mb-3 border border-copper/30 bg-white/85 p-3 text-sm font-semibold text-copper shadow-sm sm:mb-4">
+        <div className="mb-3 whitespace-pre-line border border-copper/30 bg-white/85 p-3 text-sm font-semibold text-copper shadow-sm sm:mb-4">
           {notice}
         </div>
       )}

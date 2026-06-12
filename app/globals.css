@@ -712,6 +712,65 @@ input {
   .face-bottom { transform: translate(-50%, -50%) rotateX(-90deg) translateZ(var(--half-face)); }
 }
 
+.cube-stage {
+  filter: none;
+}
+
+.cube-face {
+  border-color: rgba(255, 255, 255, 0.72);
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.72), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(219, 226, 214, 0.24) 42%, rgba(44, 64, 52, 0.16) 76%);
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.44),
+    inset 0 -22px 48px rgba(20, 24, 20, 0.11),
+    0 18px 42px rgba(50, 42, 32, 0.12);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.cube-face::before {
+  background: linear-gradient(116deg, transparent 30%, rgba(255, 255, 255, 0.66) 42%, transparent 54%);
+  opacity: 0.36;
+  animation: none;
+}
+
+.cube-face::after {
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), transparent 14%, transparent 86%, rgba(0, 0, 0, 0.12)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 34%, rgba(0, 0, 0, 0.1));
+  opacity: 0.42;
+}
+
+.cube-ground-glow {
+  filter: none;
+  opacity: 0.52;
+}
+
+.cube-caustic,
+.cube-light-orbit {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .cube-net,
+  .cube-face,
+  .cube-face::before {
+    animation: none !important;
+  }
+
+  .cube-net {
+    transform: rotateX(-8deg) rotateY(-18deg) scale(1.04);
+  }
+
+  .face-front { transform: translate(-50%, -50%) translateZ(var(--half-face)); }
+  .face-left { transform: translate(-50%, -50%) rotateY(-90deg) translateZ(var(--half-face)); }
+  .face-right { transform: translate(-50%, -50%) rotateY(90deg) translateZ(var(--half-face)); }
+  .face-back { transform: translate(-50%, -50%) rotateY(180deg) translateZ(var(--half-face)); }
+  .face-top { transform: translate(-50%, -50%) rotateX(90deg) translateZ(var(--half-face)); }
+  .face-bottom { transform: translate(-50%, -50%) rotateX(-90deg) translateZ(var(--half-face)); }
+}
+
 /* Home landing refinement: closer to the reference layout without changing the cube animation. */
 .home-landing {
   position: relative;

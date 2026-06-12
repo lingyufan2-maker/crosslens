@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { callDeepSeekJson } from "@/lib/deepseek";
 import { lensMeta, mockAIAnalysis } from "@/lib/mockAi";
-import type { Analysis, CrossLensApiAnalysis, DeepSeekAnalysisPayload, Language, LensActionItem, LensCode, Question } from "@/lib/types";
+import type { AiSourceMeta, Analysis, CrossLensApiAnalysis, DeepSeekAnalysisPayload, Language, LensActionItem, LensCode, Question } from "@/lib/types";
 
 const FALLBACK_NOTICE = "当前为本地演示答案，未连接真实 DeepSeek。";
+
+export const runtime = "nodejs";
+export const preferredRegion = "iad1";
 
 const lensCodes: LensCode[] = ["SELF", "SOC", "MKT", "PROD", "TECH", "ETH", "CAREER", "ID", "COMM", "EXEC"];
 
@@ -117,16 +120,24 @@ function mockToApiAnalysis(question: string, analysis: Analysis, language: Langu
   };
 }
 
-function fallbackAnalysis(question: string, language: Language, sourceQuestion?: Question) {
+function fallbackAnalysis(question: string, language: Language, sourceQuestion?: Question, meta?: AiSourceMeta) {
   const mock = mockAIAnalysis({ question, language, sourceQuestion });
   const analysis = mockToApiAnalysis(question, mock, language);
+  const fallbackMeta: AiSourceMeta = meta ?? {
+    source: "fallback",
+    model: process.env.DEEPSEEK_ANALYZE_MODEL || process.env.DEEPSEEK_MODEL || "deepseek-v4-pro",
+    fallbackReason: "DeepSeek fallback was used.",
+    status: null,
+    errorBody: ""
+  };
 
   console.log("[CrossLens analyze] Final response shape:", describeShape(analysis, true));
 
   return NextResponse.json({
     analysis,
     isFallback: true,
-    notice: FALLBACK_NOTICE
+    notice: FALLBACK_NOTICE,
+    meta: fallbackMeta
   });
 }
 
@@ -382,7 +393,7 @@ export async function POST(request: Request) {
     model,
     maxTokens: 2200,
     temperature: 0.7,
-    timeoutMs: 30000,
+    timeoutMs: 25000,
     messages: [
       {
         role: "system",
@@ -396,7 +407,7 @@ export async function POST(request: Request) {
   });
 
   if (!deepseek.ok) {
-    return fallbackAnalysis(question, language, body?.sourceQuestion);
+    return fallbackAnalysis(question, language, body?.sourceQuestion, deepseek.meta);
   }
 
   try {
@@ -410,7 +421,14 @@ export async function POST(request: Request) {
       isFallback: false,
       meta: deepseek.meta
     });
-  } catch {
-    return fallbackAnalysis(question, language, body?.sourceQuestion);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Unknown analyze normalization error.";
+    return fallbackAnalysis(question, language, body?.sourceQuestion, {
+      source: "fallback",
+      model,
+      fallbackReason: `DeepSeek response normalization failed: ${reason}`,
+      status: null,
+      errorBody: ""
+    });
   }
 }

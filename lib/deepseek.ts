@@ -15,6 +15,8 @@ type DeepSeekMeta = {
   source: "deepseek" | "fallback";
   model: string;
   fallbackReason?: string;
+  status?: number | null;
+  errorBody?: string;
   reasoning?: "high";
 };
 
@@ -42,7 +44,7 @@ export async function callDeepSeekJson<T>({
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if (!apiKey) {
-    return fail("Missing DEEPSEEK_API_KEY", model);
+    return fail("Missing DEEPSEEK_API_KEY", model, null);
   }
 
   const controller = new AbortController();
@@ -71,24 +73,43 @@ export async function callDeepSeekJson<T>({
     const responseBody = await response.text();
 
     if (!response.ok) {
+      const errorBody = responseBody.slice(0, 500);
       console.error("[DeepSeek] Request failed", {
         status: response.status,
-        body: responseBody
+        model,
+        errorBody
       });
 
-      return fail(`DeepSeek request failed with status ${response.status}.`, model);
+      return fail(`DeepSeek API error: status ${response.status}`, model, response.status, errorBody);
     }
 
-    const payload = JSON.parse(responseBody) as {
+    let payload: {
       choices?: Array<{ message?: { content?: string } }>;
     };
+
+    try {
+      payload = JSON.parse(responseBody) as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown JSON parse error.";
+      return fail(`DeepSeek response JSON parse failed: ${reason}`, model, null, responseBody.slice(0, 500));
+    }
+
     const content = payload.choices?.[0]?.message?.content;
 
     if (!content) {
-      return fail("DeepSeek returned empty content.", model);
+      return fail("DeepSeek returned empty content.", model, null, responseBody.slice(0, 500));
     }
 
-    const data = JSON.parse(stripJsonFences(content)) as T;
+    let data: T;
+
+    try {
+      data = JSON.parse(stripJsonFences(content)) as T;
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown JSON parse error.";
+      return fail(`DeepSeek content JSON parse failed: ${reason}`, model, null, content.slice(0, 500));
+    }
 
     return {
       ok: true,
@@ -100,21 +121,28 @@ export async function callDeepSeekJson<T>({
       }
     };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : "Unknown DeepSeek error.";
-    return fail(reason, model);
+    const reason =
+      error instanceof Error && error.name === "AbortError"
+        ? `DeepSeek timeout after ${timeoutMs}ms`
+        : error instanceof Error
+          ? error.message
+          : "Unknown DeepSeek error.";
+    return fail(reason, model, null);
   } finally {
     clearTimeout(timeout);
   }
 }
 
-function fail<T>(reason: string, model: string): DeepSeekJsonResult<T> {
+function fail<T>(reason: string, model: string, status: number | null, errorBody = ""): DeepSeekJsonResult<T> {
   return {
     ok: false,
     error: reason,
     meta: {
       source: "fallback",
       model,
-      fallbackReason: reason
+      fallbackReason: reason,
+      status,
+      errorBody
     }
   };
 }

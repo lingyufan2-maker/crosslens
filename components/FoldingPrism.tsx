@@ -19,9 +19,6 @@ export default function FoldingPrism({
 }) {
   return (
     <div className={`glass-cube-hero ${isDrawing ? "is-drawing" : ""}`} aria-hidden="true">
-      <div className="cube-light-orbit orbit-a" />
-      <div className="cube-light-orbit orbit-b" />
-
       <div className="cube-stage">
         <div key={drawKey} className="cube-net">
           {faces.map((face) => (
@@ -31,10 +28,7 @@ export default function FoldingPrism({
           ))}
         </div>
       </div>
-
       <div className="cube-ground-glow" />
-      <div className="cube-caustic caustic-a" />
-      <div className="cube-caustic caustic-b" />
     </div>
   );
 }

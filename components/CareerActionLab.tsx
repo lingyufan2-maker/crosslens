@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CareerBridgeApiResponse, CareerBridgeInput, CareerBridgeResult, Language } from "@/lib/types";
+import type { AiSourceMeta, CareerBridgeApiResponse, CareerBridgeInput, CareerBridgeResult, Language } from "@/lib/types";
 
 const emptyForm: CareerBridgeInput = {
   city: "",
@@ -10,6 +10,17 @@ const emptyForm: CareerBridgeInput = {
   goal: "",
   resources: ""
 };
+
+function deepSeekDebugNotice(meta?: AiSourceMeta, fallbackText = "当前使用本地规则版评估，未连接真实 DeepSeek。") {
+  if (!meta || meta.source === "deepseek") return "";
+
+  return [
+    fallbackText,
+    `原因：${meta.fallbackReason || "未知原因"}`,
+    `模型：${meta.model || "unknown"}`,
+    `状态码：${meta.status ?? "null"}`
+  ].join("\n");
+}
 
 const labels = {
   cn: {
@@ -104,9 +115,18 @@ export default function CareerActionLab({ language, variant = "card" }: { langua
 
       const data = (await response.json()) as CareerBridgeApiResponse;
       setResult(data.result);
-      setNotice(data.isFallback ? data.notice ?? t.fallback : "");
-    } catch {
-      setNotice(t.fallback);
+      setNotice(data.isFallback ? deepSeekDebugNotice(data.meta, data.notice ?? t.fallback) : "");
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "Unknown frontend career bridge request error.";
+      setNotice(
+        deepSeekDebugNotice({
+          source: "fallback",
+          model: "unknown",
+          fallbackReason: reason,
+          status: null,
+          errorBody: ""
+        }, t.fallback)
+      );
     } finally {
       setIsLoading(false);
     }
@@ -208,7 +228,7 @@ export default function CareerActionLab({ language, variant = "card" }: { langua
             </div>
 
             {isLoading && <p className="mt-4 rounded-md border border-moss/20 bg-lab p-3 text-sm font-semibold text-moss">{t.loading}</p>}
-            {notice && <p className="mt-4 rounded-md border border-copper/25 bg-white p-3 text-sm font-semibold text-copper">{notice}</p>}
+            {notice && <p className="mt-4 whitespace-pre-line rounded-md border border-copper/25 bg-white p-3 text-sm font-semibold text-copper">{notice}</p>}
             {result && <CareerResult result={result} labels={t} />}
           </section>
         </div>

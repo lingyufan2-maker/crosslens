@@ -6,6 +6,9 @@ const FALLBACK_NOTICE = "当前使用本地规则版评估，未连接真实 AI�
 const cityTypes = ["学习城市", "赚钱城市", "资源城市", "过渡城市", "跳板城市", "强跳板城市"];
 const gapPool = ["技能", "项目", "人脉", "学历", "语言", "行业入口"];
 
+export const runtime = "nodejs";
+export const preferredRegion = "iad1";
+
 function cleanInput(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -225,7 +228,9 @@ export async function POST(request: Request) {
       meta: {
         source: "fallback",
         model,
-        fallbackReason: "Invalid DeepSeek career bridge payload."
+        fallbackReason: "Invalid DeepSeek career bridge payload.",
+        status: null,
+        errorBody: ""
       }
     });
   }
