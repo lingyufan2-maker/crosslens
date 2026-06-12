@@ -45,7 +45,7 @@ export default function HomeQuestionField({ refreshKey = 0, boostKey = 0 }: { re
       const { width, height, isMobile } = sizeRef.current;
       if (!width || !height) return;
 
-      const count = isMobile ? 18 : 34;
+      const count = isMobile ? 16 : 28;
 
       itemsRef.current = Array.from({ length: count }, (_, index) => {
         const depth = pickDepth();

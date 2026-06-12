@@ -672,11 +672,13 @@ export default function Home() {
               <h1>
                 同一个问题，
                 <br />
-                不同人生会看见不同的路。
+                会在不同人的世界里
+                <br />
+                变成不同答案。
               </h1>
 
               <p className="hero-subline">
-                从<span>跨学科问题</span>开始，进入真实人生经验与<strong>匿名社区</strong>。
+                CrossLens 从一个困惑开始，帮你看见背后的<span>专业、资源、权力、自我价值</span>与<strong>行动路径</strong>。
               </p>
 
               <form
@@ -693,10 +695,10 @@ export default function Home() {
                     setCustomQuestion(event.target.value);
                     setInputWarning("");
                   }}
-                  placeholder="输入你的问题，开启多元视角..."
+                  placeholder="写下一个你最近想不明白的问题..."
                 />
                 <button type="submit" aria-label="开始分析" disabled={isAnalyzing}>
-                  ◇
+                  开始拆解
                 </button>
               </form>
               {inputWarning && <p className="hero-warning">{inputWarning}</p>}
@@ -730,9 +732,9 @@ export default function Home() {
                     void openLifeLens(picked);
                   }}
                 >
-                  ▧ 人生视角盲盒 ›
+                  ▧ 看不同理解维度 ›
                 </button>
-                <button type="button" onClick={openCareerStoryLens}>☵ 匿名职业故事 ›</button>
+                <button type="button" onClick={openCareerStoryLens}>☵ 打开匿名人生故事 ›</button>
                 <button
                   type="button"
                   onClick={() => {
@@ -741,7 +743,7 @@ export default function Home() {
                     void runAnalysis(picked, undefined, "custom");
                   }}
                 >
-                  ◎ 跨学科 Lens ›
+                  ◎ 生成行动建议 ›
                 </button>
               </div>
 
@@ -749,7 +751,7 @@ export default function Home() {
                 <div className="proof-star">✧</div>
                 <div className="proof-divider" />
                 <div className="proof-content">
-                  <p className="proof-main">在这里，每个问题都值得被多角度看见。</p>
+                  <p className="proof-main">不是给你一个标准答案，而是让你看见：为什么不同人会得出不同判断。</p>
                   <p className="proof-sub">
                     <span className="avatar-row">
                       <span />
@@ -758,7 +760,7 @@ export default function Home() {
                       <span />
                       <span />
                     </span>
-                    来自 132,742+ 匿名用户的真实经验与思考
+                    来自匿名故事与真实处境的观察
                   </p>
                 </div>
               </div>
