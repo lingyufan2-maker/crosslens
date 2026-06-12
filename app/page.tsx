@@ -207,7 +207,8 @@ function deepSeekDebugNotice(meta?: AiSourceMeta, fallbackText = "当前为本�
     fallbackText,
     `原因：${meta.fallbackReason || "未知原因"}`,
     `模型：${meta.model || "unknown"}`,
-    `状态码：${meta.status ?? "null"}`
+    `状态码：${meta.status ?? "null"}`,
+    `等待上限：${meta.timeoutMs ?? "unknown"}ms`
   ].join("\n");
 }
 
@@ -280,7 +281,8 @@ function localLifeLensFallback(question: string, fallbackReason: string): LifeLe
       model: "local",
       fallbackReason,
       status: null,
-      errorBody: ""
+      errorBody: "",
+      timeoutMs: 0
     }
   };
 }
@@ -554,7 +556,8 @@ export default function Home() {
           model: "unknown",
           fallbackReason: reason,
           status: null,
-          errorBody: ""
+          errorBody: "",
+          timeoutMs: 0
         })
       );
     } finally {

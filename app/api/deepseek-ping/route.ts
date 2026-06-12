@@ -34,6 +34,7 @@ export async function GET() {
       fallbackReason: result.meta.fallbackReason,
       status: result.meta.status ?? null,
       errorBody: result.meta.errorBody ?? "",
+      timeoutMs: result.meta.timeoutMs,
       latencyMs
     });
   }

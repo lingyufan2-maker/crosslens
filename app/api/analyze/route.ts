@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { callDeepSeekJson } from "@/lib/deepseek";
+import { callDeepSeekJson, getDeepSeekTimeout } from "@/lib/deepseek";
 import { lensMeta, mockAIAnalysis } from "@/lib/mockAi";
 import type { AiSourceMeta, Analysis, CrossLensApiAnalysis, DeepSeekAnalysisPayload, Language, LensActionItem, LensCode, Question } from "@/lib/types";
 
@@ -129,7 +129,8 @@ function fallbackAnalysis(question: string, language: Language, sourceQuestion?:
     model: process.env.DEEPSEEK_ANALYZE_MODEL || "deepseek-v4-flash",
     fallbackReason: "DeepSeek fallback was used.",
     status: null,
-    errorBody: ""
+    errorBody: "",
+    timeoutMs: getDeepSeekTimeout(process.env.DEEPSEEK_ANALYZE_MODEL || "deepseek-v4-flash", "analyze")
   };
 
   console.log("[CrossLens analyze] Final response shape:", describeShape(analysis, true));
@@ -430,7 +431,8 @@ export async function POST(request: Request) {
       model,
       fallbackReason: `DeepSeek response normalization failed: ${reason}`,
       status: null,
-      errorBody: ""
+      errorBody: "",
+      timeoutMs: getDeepSeekTimeout(model, "analyze")
     });
   }
 }

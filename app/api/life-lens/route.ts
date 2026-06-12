@@ -87,7 +87,8 @@ function mockLifeLens(question: string, model: string, fallbackReason: string, m
       model,
       fallbackReason,
       status: meta?.status ?? null,
-      errorBody: meta?.errorBody ?? ""
+      errorBody: meta?.errorBody ?? "",
+      timeoutMs: meta?.timeoutMs
     }
   };
 }

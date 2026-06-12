@@ -20,6 +20,7 @@ type DeepSeekMeta = {
   fallbackReason?: string;
   status?: number | null;
   errorBody?: string;
+  timeoutMs: number;
   reasoning?: "high";
 };
 
@@ -51,7 +52,7 @@ export async function callDeepSeekJson<T>({
   const effectiveTimeoutMs = timeoutMs ?? getDeepSeekTimeout(model, routeType);
 
   if (!apiKey) {
-    return fail("Missing DEEPSEEK_API_KEY", model, null);
+    return fail("Missing DEEPSEEK_API_KEY", model, null, "", effectiveTimeoutMs);
   }
 
   const controller = new AbortController();
@@ -89,10 +90,11 @@ export async function callDeepSeekJson<T>({
       console.error("[DeepSeek] Request failed", {
         status: response.status,
         model,
+        timeoutMs: effectiveTimeoutMs,
         errorBody
       });
 
-      return fail(`DeepSeek API error: status ${response.status}`, model, response.status, errorBody);
+      return fail(`DeepSeek API error: status ${response.status}`, model, response.status, errorBody, effectiveTimeoutMs);
     }
 
     let payload: {
@@ -105,13 +107,13 @@ export async function callDeepSeekJson<T>({
       };
     } catch (error) {
       const reason = error instanceof Error ? error.message : "Unknown JSON parse error.";
-      return fail(`DeepSeek response JSON parse failed: ${reason}`, model, null, responseBody.slice(0, 500));
+      return fail(`DeepSeek response JSON parse failed: ${reason}`, model, null, responseBody.slice(0, 500), effectiveTimeoutMs);
     }
 
     const content = payload.choices?.[0]?.message?.content;
 
     if (!content) {
-      return fail("DeepSeek returned empty content.", model, null, responseBody.slice(0, 500));
+      return fail("DeepSeek returned empty content.", model, null, responseBody.slice(0, 500), effectiveTimeoutMs);
     }
 
     let data: T;
@@ -120,7 +122,7 @@ export async function callDeepSeekJson<T>({
       data = JSON.parse(stripJsonFences(content)) as T;
     } catch (error) {
       const reason = error instanceof Error ? error.message : "Unknown JSON parse error.";
-      return fail(`DeepSeek content JSON parse failed: ${reason}`, model, null, content.slice(0, 500));
+      return fail(`DeepSeek content JSON parse failed: ${reason}`, model, null, content.slice(0, 500), effectiveTimeoutMs);
     }
 
     return {
@@ -129,6 +131,7 @@ export async function callDeepSeekJson<T>({
       meta: {
         source: "deepseek",
         model,
+        timeoutMs: effectiveTimeoutMs,
         ...(thinking === "enabled" && reasoningEffort ? { reasoning: reasoningEffort } : {})
       }
     };
@@ -139,7 +142,7 @@ export async function callDeepSeekJson<T>({
         : error instanceof Error
           ? error.message
           : "Unknown DeepSeek error.";
-    return fail(reason, model, null);
+    return fail(reason, model, null, "", effectiveTimeoutMs);
   } finally {
     clearTimeout(timeout);
   }
@@ -167,7 +170,7 @@ export function getDeepSeekTimeout(model: string, routeType?: "life-lens" | "ana
   return 20000;
 }
 
-function fail<T>(reason: string, model: string, status: number | null, errorBody = ""): DeepSeekJsonResult<T> {
+function fail<T>(reason: string, model: string, status: number | null, errorBody = "", timeoutMs = getDeepSeekTimeout(model)): DeepSeekJsonResult<T> {
   return {
     ok: false,
     error: reason,
@@ -176,7 +179,8 @@ function fail<T>(reason: string, model: string, status: number | null, errorBody
       model,
       fallbackReason: reason,
       status,
-      errorBody
+      errorBody,
+      timeoutMs
     }
   };
 }

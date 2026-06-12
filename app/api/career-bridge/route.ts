@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { callDeepSeekJson } from "@/lib/deepseek";
+import { callDeepSeekJson, getDeepSeekTimeout } from "@/lib/deepseek";
 import type { CareerBridgeInput, CareerBridgeResult, Language } from "@/lib/types";
 
 const FALLBACK_NOTICE = "当前使用本地规则版评估，未连接真实 AI。";
@@ -232,7 +232,8 @@ export async function POST(request: Request) {
         model,
         fallbackReason: "Invalid DeepSeek career bridge payload.",
         status: null,
-        errorBody: ""
+        errorBody: "",
+        timeoutMs: getDeepSeekTimeout(model, "career")
       }
     });
   }

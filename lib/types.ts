@@ -77,6 +77,7 @@ export type AiSourceMeta = {
   fallbackReason?: string;
   status?: number | null;
   errorBody?: string;
+  timeoutMs?: number;
   reasoning?: "high";
 };
 
