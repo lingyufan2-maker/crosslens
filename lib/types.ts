@@ -189,12 +189,14 @@ export type CareerBridgeApiResponse = {
 };
 
 export type LifeView = {
-  position: string;
-  firstReaction: string;
-  whatTheyCareAbout: string;
-  blindSpot: string;
-  tinyStory: string;
-  whatThisReveals: string;
+  lensTitle: string;
+  hiddenPosition: string;
+  spokenLine: string;
+  whatThisLensSees: string;
+  whyTheyThinkThisWay: string;
+  whatItProtects: string;
+  whatItMayMiss: string;
+  crossLensInsight: string;
 };
 
 export type LifeLensMiniLens = {

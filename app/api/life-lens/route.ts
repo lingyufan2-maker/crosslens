@@ -9,60 +9,78 @@ export const preferredRegion = "iad1";
 
 function mockLifeLens(question: string, model: string, fallbackReason: string, meta?: Partial<AiSourceMeta>): LifeLensResult {
   return {
-    question,
-    summary: "这个问题不是只有一个答案。不同位置的人，可能会先看见自己的压力、机会和可承受的风险。",
+    question: question || "我要去见一个很厉害的人，给他拍照，我是不是应该觉得他比我厉害很多？",
+    summary: "同一个问题会被不同坐标系重新解释。有人看专业，有人看资源，有人看权力，也有人看作品和自我价值。",
     lifeViews: [
       {
-        position: "一个年轻人",
-        firstReaction: "可能会先想到自己还来不来得及、会不会输给同龄人。",
-        whatTheyCareAbout: "他们更在意选择会不会影响履历、机会和未来几年的方向。",
-        blindSpot: "可能低估了慢慢积累的价值，也容易把短期焦虑当成真实判断。",
-        tinyStory: "晚上刷到同学换行业的动态，他一边收藏经验帖，一边担心自己起步太晚。",
-        whatThisReveals: "年轻人的问题常常不是不知道答案，而是缺少可验证的小入口。"
+        lensTitle: "专业维度",
+        hiddenPosition: "一个习惯用专业能力衡量关系的人",
+        spokenLine: "你看到的是他擅长的那一面。他在金融上厉害，不代表他在所有事情上都比你高。你也有你擅长的领域，只是这次场景不是你展示主场。",
+        whatThisLensSees: "这个维度会把人从单一的强弱比较里拿出来，重新放回具体能力和具体场景里看。",
+        whyTheyThinkThisWay: "这种人通常更相信专业分工，而不是笼统地崇拜成功者。他会认为每个人都有自己的主场，只是社会更容易奖励某些主场。",
+        whatItProtects: "它保护的是自我价值感，避免因为接触到更有资源的人，就自动把自己放到低位。",
+        whatItMayMiss: "它可能会低估现实中的资源差距和权力差距。对方的成功不只是专业，也可能带着资本、人脉和平台。",
+        crossLensInsight: "这是一种反符号崇拜的视角：它不否认对方厉害，但拒绝把一个人在某个领域的优势扩大成整个人格等级。"
       },
       {
-        position: "一个工作中的人",
-        firstReaction: "可能会先问：这件事会不会影响收入、晋升和每天的消耗。",
-        whatTheyCareAbout: "他们更在意现实成本，比如房租、稳定性、上司评价和可见成果。",
-        blindSpot: "可能把稳定看得太绝对，忽略了岗位内部也能做小幅转向。",
-        tinyStory: "午休时他想学新工具，但下午还有会、客户消息和月底指标。",
-        whatThisReveals: "成年人理解问题时，常常会先计算代价，而不是先谈理想。"
+        lensTitle: "资源维度",
+        hiddenPosition: "一个习惯从机会入口看事情的人",
+        spokenLine: "别急着比较谁高谁低。你这次能见到他，本身就是一个入口。重点不是他多厉害，而是你能不能把这次拍摄变成作品、信任和下一次机会。",
+        whatThisLensSees: "这个维度会把一次见面看成资源入口，而不是单纯的身份比较。",
+        whyTheyThinkThisWay: "这种人通常经历过信息差，知道机会很多时候不是凭空出现，而是从一次具体接触里延伸出来。",
+        whatItProtects: "它保护的是机会感和行动动力，让人不被对方的光环压住，而是去看自己能带走什么。",
+        whatItMayMiss: "它可能会把关系过度工具化，忽略当下合作里的尊重、边界和真实感受。",
+        crossLensInsight: "这是资源社会里的入口意识：很多机会不是正式邀请，而是一次足够专业的交付。"
       },
       {
-        position: "一个年长的人",
-        firstReaction: "可能会想到这件事最后会不会让人更安稳、更少后悔。",
-        whatTheyCareAbout: "他们更在意身体、关系、长期安全感和人生到后面是否能承受。",
-        blindSpot: "可能不够理解年轻人面对技术、城市和竞争变化时的速度感。",
-        tinyStory: "散步时他听孩子说想换方向，第一反应不是反对，而是担心对方摔得太疼。",
-        whatThisReveals: "年长视角会提醒我们：选择不只关乎机会，也关乎可持续。"
+        lensTitle: "权力维度",
+        hiddenPosition: "一个对关系不平等很敏感的人",
+        spokenLine: "你当然可以欣赏他，但也别忘了你现在是在为他提供专业服务。对方有钱有身份，不代表你就要自动矮一截。",
+        whatThisLensSees: "这个维度看见了关系里的权力落差，也提醒你不要把服务关系误读成自我贬低。",
+        whyTheyThinkThisWay: "这种人可能见过身份、金钱或平台如何影响互动，所以会更敏感地保护自己的位置。",
+        whatItProtects: "它保护的是边界感和不被权威压倒的能力。",
+        whatItMayMiss: "它可能会让人过度警惕，错过轻松学习或自然合作的空间。",
+        crossLensInsight: "权力视角不是让你敌视对方，而是提醒你：尊重别人和放低自己不是一回事。"
       },
       {
-        position: "资源位置不同的人",
-        firstReaction: "可能会先问：我有没有人能问、钱能垫、时间能试错。",
-        whatTheyCareAbout: "他们更在意信息入口、试错成本和失败后有没有退路。",
-        blindSpot: "资源少的人可能过度保守，资源多的人可能低估别人行动有多难。",
-        tinyStory: "同样想转行，一个人能找前辈内推，另一个人只能在网上反复搜关键词。",
-        whatThisReveals: "很多选择差异不是性格差异，而是信息和退路的差异。"
+        lensTitle: "作品维度",
+        hiddenPosition: "一个更关心产出的人",
+        spokenLine: "我会先想怎么把照片拍好。人再厉害，最后也要落到画面上。你能不能把他的气质拍出来，才是你真正能带走的东西。",
+        whatThisLensSees: "这个维度把注意力从身份比较转回具体作品，关注你能交付什么、留下什么。",
+        whyTheyThinkThisWay: "这种人通常相信作品比情绪更能改变处境，也更习惯用结果证明自己。",
+        whatItProtects: "它保护的是行动感，让人从焦虑里回到可控制的任务。",
+        whatItMayMiss: "它可能会压低情绪的重要性，好像只要作品做好，内心的不安就不需要被看见。",
+        crossLensInsight: "作品视角把抽象的自卑变成具体的创作问题：你不是在和他的人生比赛，你是在完成一次表达。"
+      },
+      {
+        lensTitle: "自我价值维度",
+        hiddenPosition: "一个不容易被成功符号压倒的人",
+        spokenLine: "有些人的厉害是被社会看见了，有些人的厉害还没被放到正确的位置上。你现在不是不厉害，只是还没站到你的展示场。",
+        whatThisLensSees: "这个维度看见了社会评价和真实价值之间的距离，不把外部光环等同于人的全部价值。",
+        whyTheyThinkThisWay: "这种人通常有比较稳定的自我价值感，或者经历过被低估后重新找到自己位置的过程。",
+        whatItProtects: "它保护的是自尊和长期成长的耐心。",
+        whatItMayMiss: "它可能会让人暂时低估外部评价系统的现实影响，比如资源、曝光和信任门槛。",
+        crossLensInsight: "自我价值视角提醒你：社会看见谁，不等于谁才值得被看见。"
       }
     ],
     crossDisciplinaryLens: [
       {
         lens: "心理学",
-        simpleExplanation: "人会用自己的经历解释问题，这叫认知框架，简单说就是每个人都戴着自己的眼镜。",
-        realExample: "同样看到改变，有人想到机会，有人先想到失控。"
+        simpleExplanation: "自我价值感会影响一个人如何解释差距。价值感越稳，越不容易把一次见面理解成等级审判。",
+        realExample: "同样见到成功者，有人会学习，有人会自卑，有人会立刻问自己能产出什么。"
       },
       {
         lens: "社会学",
-        simpleExplanation: "资源和环境会影响一个人能看见什么选择，不是所有人都站在同一个入口前。",
-        realExample: "有人很早知道行业规则，有人到毕业才第一次听说。"
+        simpleExplanation: "社会会把资源、职业和财富包装成成功符号，人容易把符号误认为人的全部价值。",
+        realExample: "金融、名校、大城市这些标签很容易让人自动把对方放到更高位置。"
       },
       {
-        lens: "经济学",
-        simpleExplanation: "选择有成本。资源越少的人，越需要先考虑失败后能不能承受。",
-        realExample: "同样换方向，有存款和没存款的人，风险完全不同。"
+        lens: "职业发展",
+        simpleExplanation: "一次接触能不能变成机会，取决于你是否能留下可信作品和稳定交付。",
+        realExample: "拍摄不是只见一个厉害的人，也是在制造作品、信任和下一次合作的证据。"
       }
     ],
-    takeaway: ["先看见人站在哪里，再评价他的选择。", "同一个问题，常常藏着不同的风险账本。", "经验差异本身，就是一种信息差。"],
+    takeaway: ["不要把别人的主场误认为你的低位。", "厉害可以被欣赏，但不必被崇拜成等级。", "把焦虑转成作品，是最可控的下一步。"],
     meta: {
       source: "fallback",
       model,
@@ -75,16 +93,13 @@ function mockLifeLens(question: string, model: string, fallbackReason: string, m
 
 function normalizeResult(payload: Partial<LifeLensResult>, question: string, meta: AiSourceMeta): LifeLensResult {
   const fallback = mockLifeLens(question, meta.model, meta.fallbackReason || "Invalid DeepSeek payload.", meta);
-  const lifeViews = normalizeLifeViews(payload.lifeViews, fallback.lifeViews);
-  const lenses = normalizeMiniLenses(payload.crossDisciplinaryLens, fallback.crossDisciplinaryLens);
-  const takeaway = normalizeStringArray(payload.takeaway, fallback.takeaway, 3);
 
   return {
     question: stringValue(payload.question, question),
     summary: stringValue(payload.summary, fallback.summary),
-    lifeViews,
-    crossDisciplinaryLens: lenses,
-    takeaway,
+    lifeViews: normalizeLifeViews(payload.lifeViews, fallback.lifeViews),
+    crossDisciplinaryLens: normalizeMiniLenses(payload.crossDisciplinaryLens, fallback.crossDisciplinaryLens),
+    takeaway: normalizeStringArray(payload.takeaway, fallback.takeaway, 3),
     meta
   };
 }
@@ -92,17 +107,19 @@ function normalizeResult(payload: Partial<LifeLensResult>, question: string, met
 function normalizeLifeViews(value: unknown, fallback: LifeView[]) {
   if (!Array.isArray(value) || value.length === 0) return fallback;
 
-  return value.slice(0, 4).map((item, index) => {
+  return value.slice(0, 6).map((item, index) => {
     const view = typeof item === "object" && item !== null ? (item as Partial<LifeView>) : {};
     const fallbackItem = fallback[index] || fallback[0];
 
     return {
-      position: stringValue(view.position, fallbackItem.position),
-      firstReaction: stringValue(view.firstReaction, fallbackItem.firstReaction),
-      whatTheyCareAbout: stringValue(view.whatTheyCareAbout, fallbackItem.whatTheyCareAbout),
-      blindSpot: stringValue(view.blindSpot, fallbackItem.blindSpot),
-      tinyStory: stringValue(view.tinyStory, fallbackItem.tinyStory),
-      whatThisReveals: stringValue(view.whatThisReveals, fallbackItem.whatThisReveals)
+      lensTitle: stringValue(view.lensTitle, fallbackItem.lensTitle),
+      hiddenPosition: stringValue(view.hiddenPosition, fallbackItem.hiddenPosition),
+      spokenLine: stringValue(view.spokenLine, fallbackItem.spokenLine),
+      whatThisLensSees: stringValue(view.whatThisLensSees, fallbackItem.whatThisLensSees),
+      whyTheyThinkThisWay: stringValue(view.whyTheyThinkThisWay, fallbackItem.whyTheyThinkThisWay),
+      whatItProtects: stringValue(view.whatItProtects, fallbackItem.whatItProtects),
+      whatItMayMiss: stringValue(view.whatItMayMiss, fallbackItem.whatItMayMiss),
+      crossLensInsight: stringValue(view.crossLensInsight, fallbackItem.crossLensInsight)
     };
   });
 }
@@ -133,26 +150,39 @@ function stringValue(value: unknown, fallback: string) {
 }
 
 function buildPrompt(question: string) {
-  return `你是 CrossLens 的人生视角分析 AI。
-CrossLens 是一个匿名人生经验社区。请分析同一个问题在不同人生位置里可能被怎样理解。
+  return `你是 CrossLens 的 Life Lens 生成器。
 
-用户问题：${question}
+CrossLens 不是简单展示“不同职业的人怎么想”，而是展示：同一件事，不同人会用不同的理解维度去解释。
 
-只返回合法 JSON，不要 markdown，不要代码块。
+有些差异是显性的，比如城市、行业、年龄、职业。
+但更重要的是隐形差异，比如：
+资源感、专业感、权力感、阶层敏感度、自我价值感、风险感、长期主义、关系边界、机会识别、情绪保护。
 
-生成要求：
-- 只生成 4 个 lifeViews：一个年轻人、一个工作中的人、一个年长的人、一个城市或资源位置不同的人。
-- 每个 position 都用“可能会这样看”的方式表达，不要绝对化，不要刻板化。
-- 每个视角必须有具体生活场景，比如考试、房租、排班、晋升、身体、关系、信息入口、试错成本。
-- 语言简单，像聪明朋友解释，80% 人话，10% 简单概念，10% 行动启发。
-- crossDisciplinaryLens 只给 3 个，必须短。
-- takeaway 给 3 句，不要鸡汤。
+用户问题：
+${question}
 
-禁止使用这些万能句：
-- 把这个问题和自己眼前最真实的压力联系起来
-- 不是急着找标准答案
-- 看见的不是全部世界
-- 同一个问题背后藏着不同人的机会、风险、信息差和安全感
+请生成 4 到 6 个不同的理解维度。
+
+每个 lifeView 必须包含：
+1. lensTitle：理解维度
+2. hiddenPosition：这个人的隐形位置
+3. spokenLine：像真实人说出来的一段话
+4. whatThisLensSees：这个维度看见了什么
+5. whyTheyThinkThisWay：为什么这种人会这样理解
+6. whatItProtects：这个视角保护了什么
+7. whatItMayMiss：这个视角可能忽略什么
+8. crossLensInsight：一句 CrossLens 小结
+
+要求：
+- 不要每张卡都写成“某城市某职业”。
+- 可以出现城市/行业，但不能只靠城市/行业分类。
+- 必须体现隐形阶层、经验差异和理解维度差异。
+- spokenLine 必须像真人说话，不要像 AI 分析，长度 50 到 120 字。
+- 不要模板化。
+- 不要让每个视角说同一种话。
+- 不要刻板化群体。
+- 不要输出 markdown。
+- 只返回合法 JSON。
 
 返回 JSON 结构：
 {
@@ -160,12 +190,14 @@ CrossLens 是一个匿名人生经验社区。请分析同一个问题在不同�
   "summary": "",
   "lifeViews": [
     {
-      "position": "",
-      "firstReaction": "",
-      "whatTheyCareAbout": "",
-      "blindSpot": "",
-      "tinyStory": "",
-      "whatThisReveals": ""
+      "lensTitle": "",
+      "hiddenPosition": "",
+      "spokenLine": "",
+      "whatThisLensSees": "",
+      "whyTheyThinkThisWay": "",
+      "whatItProtects": "",
+      "whatItMayMiss": "",
+      "crossLensInsight": ""
     }
   ],
   "crossDisciplinaryLens": [
@@ -190,7 +222,7 @@ export async function POST(request: Request) {
   const model = process.env.DEEPSEEK_LIFE_MODEL || process.env.DEEPSEEK_MODEL || "deepseek-v4-pro";
   const deepseek = await callDeepSeekJson<Partial<LifeLensResult>>({
     model,
-    maxTokens: 1600,
+    maxTokens: 2200,
     temperature: 0.7,
     timeoutMs: 25000,
     messages: [

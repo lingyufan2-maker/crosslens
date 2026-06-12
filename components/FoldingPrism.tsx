@@ -1,34 +1,57 @@
 "use client";
 
-const faces = [
-  { key: "front", label: "故事" },
-  { key: "back", label: "资源" },
-  { key: "left", label: "职业" },
-  { key: "right", label: "城市" },
-  { key: "top", label: "年龄" },
-  { key: "bottom", label: "学科" }
-];
+import Image from "next/image";
+import { useState } from "react";
 
 export default function FoldingPrism({
-  isDrawing = false,
-  drawKey = 0
+  activeQuestion,
+  isDrawing,
+  drawKey
 }: {
   activeQuestion?: string;
   isDrawing?: boolean;
   drawKey?: number;
 }) {
+  void activeQuestion;
+  void isDrawing;
+  void drawKey;
+
+  const [imageSrc, setImageSrc] = useState("/hero-glass-cube.webp");
+  const [showPlaceholder, setShowPlaceholder] = useState(false);
+
+  function handleImageError() {
+    if (imageSrc.endsWith(".webp")) {
+      setImageSrc("/hero-glass-cube.png");
+      return;
+    }
+
+    setShowPlaceholder(true);
+  }
+
   return (
-    <div className={`glass-cube-hero ${isDrawing ? "is-drawing" : ""}`} aria-hidden="true">
-      <div className="cube-stage">
-        <div key={drawKey} className="cube-net">
-          {faces.map((face) => (
-            <div key={face.key} className={`cube-face face-${face.key}`}>
-              <span>{face.label}</span>
-            </div>
-          ))}
-        </div>
+    <div className="glass-image-hero" aria-hidden="true">
+      <div className="glass-orbit orbit-a" />
+      <div className="glass-orbit orbit-b" />
+
+      <div className="glass-image-wrap">
+        {showPlaceholder ? (
+          <div className="glass-cube-placeholder" />
+        ) : (
+          <Image
+            src={imageSrc}
+            alt=""
+            width={900}
+            height={900}
+            priority
+            className="glass-cube-image"
+            onError={handleImageError}
+          />
+        )}
       </div>
-      <div className="cube-ground-glow" />
+
+      <div className="glass-ground-shadow" />
+      <div className="glass-caustic caustic-a" />
+      <div className="glass-caustic caustic-b" />
     </div>
   );
 }

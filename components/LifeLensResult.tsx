@@ -50,21 +50,24 @@ export default function LifeLensResult({
           </section>
 
           <section className="rounded-md border border-ink/12 bg-white/78 p-4 shadow-soft sm:p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-copper">不同人生怎么看</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-copper">不同理解维度怎么看</p>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {result.lifeViews.map((view) => (
-                <details key={`${view.position}-${view.firstReaction}`} className="group rounded-md border border-ink/10 bg-paper/55 p-4">
+                <details key={`${view.lensTitle}-${view.hiddenPosition}`} className="group rounded-md border border-ink/10 bg-paper/55 p-4">
                   <summary className="cursor-pointer list-none">
-                    <span className="inline-flex rounded-full border border-moss/20 bg-lab px-3 py-1 text-xs font-bold text-moss">{view.position}</span>
-                    <p className="mt-3 text-sm leading-7 text-ink/76">{view.firstReaction}</p>
-                    <span className="mt-3 inline-block text-xs font-bold text-moss group-open:hidden">展开这个人生视角</span>
-                    <span className="mt-3 hidden text-xs font-bold text-moss group-open:inline-block">收起</span>
+                    <span className="life-lens-tag">{view.lensTitle}</span>
+                    <p className="life-hidden-position">{view.hiddenPosition}</p>
+                    <p className="mt-4 text-xs font-bold uppercase tracking-[0.14em] text-copper">他可能会这样说</p>
+                    <p className="life-spoken-line">{view.spokenLine}</p>
+                    <span className="inline-block text-xs font-bold text-moss group-open:hidden">展开这个理解维度</span>
+                    <span className="hidden text-xs font-bold text-moss group-open:inline-block">收起</span>
                   </summary>
                   <div className="mt-4 grid gap-3 border-t border-ink/10 pt-4">
-                    <MiniBlock title="他们在意什么" value={view.whatTheyCareAbout} />
-                    <MiniBlock title="可能没看见什么" value={view.blindSpot} />
-                    <MiniBlock title="一个小场景" value={view.tinyStory} />
-                    <MiniBlock title="这揭示了什么" value={view.whatThisReveals} />
+                    <MiniBlock title="这个维度看见了什么" value={view.whatThisLensSees} />
+                    <MiniBlock title="为什么他会这样想" value={view.whyTheyThinkThisWay} />
+                    <MiniBlock title="这个视角保护了什么" value={view.whatItProtects} />
+                    <MiniBlock title="它可能忽略什么" value={view.whatItMayMiss} />
+                    <MiniBlock title="这说明什么" value={view.crossLensInsight} />
                   </div>
                 </details>
               ))}
