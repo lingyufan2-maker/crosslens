@@ -107,7 +107,7 @@ function normalizeResult(payload: Partial<LifeLensResult>, question: string, met
 function normalizeLifeViews(value: unknown, fallback: LifeView[]) {
   if (!Array.isArray(value) || value.length === 0) return fallback;
 
-  return value.slice(0, 6).map((item, index) => {
+  return value.slice(0, 4).map((item, index) => {
     const view = typeof item === "object" && item !== null ? (item as Partial<LifeView>) : {};
     const fallbackItem = fallback[index] || fallback[0];
 
@@ -147,6 +147,49 @@ function normalizeStringArray(value: unknown, fallback: string[], limit: number)
 
 function stringValue(value: unknown, fallback: string) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function buildFastPrompt(question: string) {
+  return `你是 CrossLens 的 Life Lens 生成器。
+任务：针对用户的问题，生成 4 个不同“理解维度”。
+不要写职业模板，不要写城市模板。
+重点是不同人的认知坐标系，例如：专业、资源、权力、自我价值、长期主义、关系边界。
+
+用户问题：
+${question}
+
+只返回 JSON：
+{
+  "question": "",
+  "summary": "一句话总结",
+  "lifeViews": [
+    {
+      "lensTitle": "专业维度",
+      "hiddenPosition": "一个习惯用专业能力衡量关系的人",
+      "spokenLine": "像真人说的一段话，50 到 100 字",
+      "whatThisLensSees": "这个维度看见什么",
+      "whyTheyThinkThisWay": "为什么他会这样想",
+      "whatItProtects": "这个视角保护什么",
+      "whatItMayMiss": "这个视角可能忽略什么",
+      "crossLensInsight": "一句小结"
+    }
+  ],
+  "crossDisciplinaryLens": [
+    {
+      "lens": "",
+      "simpleExplanation": "",
+      "realExample": ""
+    }
+  ],
+  "takeaway": ["", "", ""]
+}
+
+要求：
+- lifeViews 只能有 4 个。
+- spokenLine 必须像真人说话。
+- 每个字段都要短。
+- 不要 markdown。
+- 不要解释 JSON 外的内容。`;
 }
 
 function buildPrompt(question: string) {
@@ -222,9 +265,9 @@ export async function POST(request: Request) {
   const model = process.env.DEEPSEEK_LIFE_MODEL || "deepseek-v4-flash";
   const deepseek = await callDeepSeekJson<Partial<LifeLensResult>>({
     model,
-    maxTokens: 1600,
-    temperature: 0.85,
-    timeoutMs: 18000,
+    maxTokens: 900,
+    temperature: 0.82,
+    timeoutMs: 15000,
     thinking: "disabled",
     messages: [
       {
@@ -233,7 +276,7 @@ export async function POST(request: Request) {
       },
       {
         role: "user",
-        content: buildPrompt(question)
+        content: buildFastPrompt(question)
       }
     ]
   });

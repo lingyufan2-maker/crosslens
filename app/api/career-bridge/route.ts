@@ -190,7 +190,7 @@ export async function POST(request: Request) {
     model,
     maxTokens: 1800,
     temperature: 0.75,
-    timeoutMs: 22000,
+    timeoutMs: 18000,
     thinking: "disabled",
     messages: [
       {

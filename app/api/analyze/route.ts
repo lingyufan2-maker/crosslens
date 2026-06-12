@@ -125,7 +125,7 @@ function fallbackAnalysis(question: string, language: Language, sourceQuestion?:
   const analysis = mockToApiAnalysis(question, mock, language);
   const fallbackMeta: AiSourceMeta = meta ?? {
     source: "fallback",
-    model: process.env.DEEPSEEK_ANALYZE_MODEL || "deepseek-v4-pro",
+    model: process.env.DEEPSEEK_ANALYZE_MODEL || "deepseek-v4-flash",
     fallbackReason: "DeepSeek fallback was used.",
     status: null,
     errorBody: ""
@@ -388,14 +388,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Question is required." }, { status: 400 });
   }
 
-  const model = process.env.DEEPSEEK_ANALYZE_MODEL || "deepseek-v4-pro";
+  const model = process.env.DEEPSEEK_ANALYZE_MODEL || "deepseek-v4-flash";
   const deepseek = await callDeepSeekJson<DeepSeekAnalysisPayload>({
     model,
     maxTokens: 2800,
     temperature: 0.7,
-    timeoutMs: 30000,
-    thinking: "enabled",
-    reasoningEffort: "high",
+    timeoutMs: 22000,
+    thinking: "disabled",
     messages: [
       {
         role: "system",

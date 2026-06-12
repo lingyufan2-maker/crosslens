@@ -33,7 +33,7 @@ Then edit `.env.local`:
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_LIFE_MODEL=deepseek-v4-flash
-DEEPSEEK_ANALYZE_MODEL=deepseek-v4-pro
+DEEPSEEK_ANALYZE_MODEL=deepseek-v4-flash
 DEEPSEEK_CAREER_MODEL=deepseek-v4-flash
 ```
 
@@ -68,6 +68,14 @@ npm run start
 
 The frontend never reads `DEEPSEEK_API_KEY`. It only calls server API routes such as `/api/analyze`, `/api/life-lens`, and `/api/career-bridge`. The API key is read server-side only.
 
+To test whether DeepSeek is reachable from the deployed app, open:
+
+```bash
+/api/deepseek-ping
+```
+
+It uses `DEEPSEEK_LIFE_MODEL` or `deepseek-v4-flash`, disables thinking, and returns latency plus any failure reason.
+
 ## Mock Mode And Real AI Mode
 
 - Mock mode: If `DEEPSEEK_API_KEY` is missing, CrossLens automatically uses `mockAIAnalysis` and shows `当前为本地演示答案，未连接真实 DeepSeek。`
@@ -86,7 +94,7 @@ The frontend never reads `DEEPSEEK_API_KEY`. It only calls server API routes suc
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
 DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_LIFE_MODEL=deepseek-v4-flash
-DEEPSEEK_ANALYZE_MODEL=deepseek-v4-pro
+DEEPSEEK_ANALYZE_MODEL=deepseek-v4-flash
 DEEPSEEK_CAREER_MODEL=deepseek-v4-flash
 ```
 
