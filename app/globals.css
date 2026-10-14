@@ -301,6 +301,7 @@ input {
 .hero-search button:hover {
   transform: translateY(-1px);
   background: #315f51;
+  color: #fffaf0
 }
 
 .hero-warning {
