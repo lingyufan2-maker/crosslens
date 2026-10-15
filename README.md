@@ -80,7 +80,7 @@ It uses `DEEPSEEK_LIFE_MODEL` or `deepseek-v4-flash`, disables thinking, and ret
 
 CrossLens never waits forever. Server routes automatically choose timeout by model:
 
-- Any model name containing `pro`: waits up to `580000ms` so the route has time to return fallback before Vercel reaches 600 seconds.
+- Any model name containing `pro`: waits up to `280000ms` so the route has 20 seconds to return fallback before Vercel reaches 300 seconds.
 - Life Lens with flash models: `15000ms`.
 - Analyze with flash models: `22000ms`.
 - Career Bridge with flash models: `18000ms`.
@@ -91,7 +91,7 @@ If you want Life Lens to use the pro model, set:
 DEEPSEEK_LIFE_MODEL=deepseek-v4-pro
 ```
 
-If your Vercel plan rejects `maxDuration = 600`, change `maxDuration` to `300` in the API route files and redeploy.
+The Analyze, Life Lens, and Career Bridge API routes use `maxDuration = 300` to stay within the deployment's 300-second limit. Requests that need more than five minutes require a separate execution strategy; increasing these timeouts alone will not support them.
 
 ## Mock Mode And Real AI Mode
 

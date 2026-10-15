@@ -152,7 +152,8 @@ export function getDeepSeekTimeout(model: string, routeType?: "life-lens" | "ana
   const isPro = model.includes("pro");
 
   if (isPro) {
-    return 580000;
+    // Leave 20 seconds for fallback before the 300-second route limit.
+    return 280000;
   }
 
   if (routeType === "life-lens") {
