@@ -6,7 +6,7 @@ import type { AiSourceMeta, Analysis, CrossLensApiAnalysis, DeepSeekAnalysisPayl
 const FALLBACK_NOTICE = "当前为本地演示答案，未连接真实 DeepSeek。";
 
 export const runtime = "nodejs";
-export const maxDuration = 600;
+export const maxDuration = 300;
 export const preferredRegion = "iad1";
 
 const lensCodes: LensCode[] = ["SELF", "SOC", "MKT", "PROD", "TECH", "ETH", "CAREER", "ID", "COMM", "EXEC"];
